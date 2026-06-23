@@ -16,6 +16,7 @@
 		"build": "tsc -noEmit -skipLibCheck && run-s build:css build:js",
 		"build:js": "node esbuild.config.mjs production",
 		"build:css": "tailwindcss -i src/styles.css -o styles.css --minify",
+		"test": "bun test",
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
 		"lint": "eslint ."
 	},
