@@ -1,46 +1,64 @@
 import { Plugin, WorkspaceLeaf } from 'obsidian';
-import { DEFAULT_SETTINGS, TemplateSettingTab } from './settings';
-import type { TemplateSettings } from './settings';
-import { ExampleView, EXAMPLE_VIEW_TYPE } from './ui/ExampleView';
+import { DEFAULT_SETTINGS, CrmSettingTab } from './settings';
+import type { CrmSettings } from './settings';
+import { CrmView, CRM_VIEW_TYPE } from './ui/CrmView';
+import { CrmStore } from './crm/store';
+import { ObsidianVaultAdapter } from './crm/obsidian-adapter';
 
-export default class SveltePluginTemplate extends Plugin {
-	settings!: TemplateSettings;
+export default class CrmPlugin extends Plugin {
+	settings!: CrmSettings;
+	adapter!: ObsidianVaultAdapter;
+	store!: CrmStore;
+	private vaultChangeTimer: number | null = null;
 
 	async onload() {
 		await this.loadSettings();
 
-		this.registerView(EXAMPLE_VIEW_TYPE, (leaf) => new ExampleView(leaf));
+		this.adapter = new ObsidianVaultAdapter(this.app, () => this.settings.rootFolder);
+		this.store = new CrmStore(this.adapter, () => this.settings.rootFolder);
 
-		// Ribbon icon to open the example view.
-		this.addRibbonIcon('layout-template', 'Open Svelte plugin template', () => {
+		this.registerView(CRM_VIEW_TYPE, (leaf) => new CrmView(leaf, this));
+
+		this.addRibbonIcon('contact', 'Open CRM', () => {
 			void this.activateView();
 		});
 
-		// Command to open the example view.
 		this.addCommand({
-			id: 'open-view',
-			name: 'Open view',
-			callback: () => {
-				void this.activateView();
-			},
+			id: 'open-crm',
+			name: 'Open CRM',
+			callback: () => void this.activateView(),
 		});
 
-		this.addSettingTab(new TemplateSettingTab(this.app, this));
+		this.addSettingTab(new CrmSettingTab(this.app, this));
+
+		this.registerEvent(this.app.vault.on('create', () => this.onVaultChange()));
+		this.registerEvent(this.app.vault.on('modify', () => this.onVaultChange()));
+		this.registerEvent(this.app.vault.on('delete', () => this.onVaultChange()));
+		this.registerEvent(this.app.vault.on('rename', () => this.onVaultChange()));
+		this.registerEvent(this.app.metadataCache.on('resolved', () => this.onVaultChange()));
 	}
 
 	onunload() {}
 
+	private onVaultChange(): void {
+		if (this.vaultChangeTimer !== null) window.clearTimeout(this.vaultChangeTimer);
+		this.vaultChangeTimer = window.setTimeout(() => {
+			void this.refresh();
+		}, 300);
+	}
+
+	async refresh(): Promise<void> {
+		await this.adapter.refresh();
+		this.store.reindex();
+	}
+
 	async activateView(): Promise<void> {
 		const { workspace } = this.app;
-
-		let leaf: WorkspaceLeaf | null =
-			workspace.getLeavesOfType(EXAMPLE_VIEW_TYPE)[0] ?? null;
-
+		let leaf: WorkspaceLeaf | null = workspace.getLeavesOfType(CRM_VIEW_TYPE)[0] ?? null;
 		if (!leaf) {
 			leaf = workspace.getLeaf('tab');
-			await leaf.setViewState({ type: EXAMPLE_VIEW_TYPE, active: true });
+			await leaf.setViewState({ type: CRM_VIEW_TYPE, active: true });
 		}
-
 		await workspace.revealLeaf(leaf);
 	}
 
@@ -48,7 +66,7 @@ export default class SveltePluginTemplate extends Plugin {
 		this.settings = Object.assign(
 			{},
 			DEFAULT_SETTINGS,
-			(await this.loadData()) as Partial<TemplateSettings>,
+			(await this.loadData()) as Partial<CrmSettings>,
 		);
 	}
 

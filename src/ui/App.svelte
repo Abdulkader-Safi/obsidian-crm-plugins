@@ -1,16 +1,20 @@
 <script lang="ts">
-	import { Notice } from 'obsidian';
-	import { Button } from './lib/components/ui/button';
+	import { getCrm } from './context';
 
-	function handleClick() {
-		new Notice('Button clicked. Svelte + Tailwind + shadcn is working.');
-	}
+	const crm = getCrm();
+	let model = $state(crm.store.getModel());
+
+	$effect(() => {
+		const off = crm.store.subscribe(() => {
+			model = crm.store.getModel();
+		});
+		return off;
+	});
 </script>
 
-<div class="app-root p-6">
-	<h1 class="text-foreground mb-2 text-lg font-semibold">Svelte plugin template</h1>
-	<p class="text-muted-foreground mb-4 text-sm">
-		Main view, styled with shadcn-svelte and following your Obsidian theme.
+<div class="app-root bg-background text-foreground h-full overflow-auto p-6">
+	<h1 class="mb-2 text-lg font-semibold">CRM</h1>
+	<p class="text-muted-foreground text-sm">
+		{model.clients.length} clients indexed.
 	</p>
-	<Button onclick={handleClick}>Click me</Button>
 </div>
