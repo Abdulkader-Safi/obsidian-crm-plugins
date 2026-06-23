@@ -10,6 +10,7 @@
 	import Projects from './routes/Projects.svelte';
 	import ProjectDetail from './routes/ProjectDetail.svelte';
 	import Pipeline from './routes/Pipeline.svelte';
+	import { Toaster } from '$lib/components/ui/sonner';
 	import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
 	import Kanban from '@lucide/svelte/icons/kanban';
 	import Users from '@lucide/svelte/icons/users';
@@ -95,6 +96,8 @@
 			</Button>
 		</div>
 	</header>
+
+	<Toaster position="bottom-right" />
 
 	<main class="flex-1 overflow-auto p-7">
 		{#if route.name === 'dashboard'}

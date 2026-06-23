@@ -2,6 +2,7 @@
 	import type { CrmStore } from '../../crm/store';
 	import * as Alert from '$lib/components/ui/alert';
 	import { Button } from '$lib/components/ui/button';
+	import { toast } from 'svelte-sonner';
 
 	let {
 		store,
@@ -18,6 +19,7 @@
 		deleting = true;
 		try {
 			await store.deleteClient(client);
+			toast.success(`Deleted ${client.name}`);
 			close();
 		} finally {
 			deleting = false;

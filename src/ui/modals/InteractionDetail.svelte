@@ -4,6 +4,7 @@
 	import * as Alert from '$lib/components/ui/alert';
 	import { Button } from '$lib/components/ui/button';
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
+	import { toast } from 'svelte-sonner';
 
 	let {
 		store,
@@ -31,6 +32,7 @@
 		deleting = true;
 		try {
 			await store.deleteNote(it.path);
+			toast.success('Interaction deleted');
 			close();
 		} finally {
 			deleting = false;

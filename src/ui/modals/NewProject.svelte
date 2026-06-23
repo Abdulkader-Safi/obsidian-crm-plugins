@@ -5,6 +5,7 @@
 	import * as Select from '$lib/components/ui/select';
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
+	import { toast } from 'svelte-sonner';
 
 	let {
 		store,
@@ -59,6 +60,7 @@
 				},
 				scope,
 			);
+			toast.success(`Created project ${name.trim()}`);
 			close();
 		} finally {
 			saving = false;

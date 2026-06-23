@@ -2,6 +2,7 @@
 	import type { CrmStore } from '../../crm/store';
 	import { CLIENT_STATUSES, STATUS_LABELS, type ClientStatus, type Client } from '../../crm/types';
 	import { clientFrontmatter } from '../../crm/frontmatter';
+	import { toast } from 'svelte-sonner';
 	import * as Field from '$lib/components/ui/field';
 	import * as Select from '$lib/components/ui/select';
 	import { Input } from '$lib/components/ui/input';
@@ -59,8 +60,10 @@
 		try {
 			if (isEdit && client) {
 				await store.updateClient(client.path, clientFrontmatter(input));
+				toast.success(`Updated ${input.name}`);
 			} else {
 				await store.createClient(input, followUpNote);
+				toast.success(`Created ${input.name}`);
 			}
 			close();
 		} finally {

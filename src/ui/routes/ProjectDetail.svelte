@@ -9,6 +9,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Checkbox } from '$lib/components/ui/checkbox';
 	import { statusHue } from '$lib/status';
+	import { toast } from 'svelte-sonner';
 
 	let { project, model, go }: { project: Project; model: CrmModel; go: Go } = $props();
 	const crm = getCrm();
@@ -47,6 +48,7 @@
 
 	async function remove() {
 		await crm.store.deleteProject(project);
+		toast.success(`Deleted ${project.name}`);
 		go({ name: 'projects' });
 	}
 </script>

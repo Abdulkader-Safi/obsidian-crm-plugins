@@ -5,9 +5,11 @@
 	import { getCrm } from '../context';
 	import * as Table from '$lib/components/ui/table';
 	import * as ToggleGroup from '$lib/components/ui/toggle-group';
+	import * as Empty from '$lib/components/ui/empty';
 	import { Button } from '$lib/components/ui/button';
 	import { statusHue } from '$lib/status';
 	import Plus from '@lucide/svelte/icons/plus';
+	import FolderKanban from '@lucide/svelte/icons/folder-kanban';
 
 	let { model, search, go }: { model: CrmModel; search: string; go: Go } = $props();
 	const crm = getCrm();
@@ -47,46 +49,63 @@
 		</Button>
 	</div>
 
-	<div class="border-border overflow-hidden rounded-lg border">
-		<Table.Root>
-			<Table.Header>
-				<Table.Row>
-					<Table.Head>Project</Table.Head>
-					<Table.Head>Client</Table.Head>
-					<Table.Head>Status</Table.Head>
-					<Table.Head>Deadline</Table.Head>
-					<Table.Head class="text-right">Progress</Table.Head>
-					<Table.Head class="text-right">Budget</Table.Head>
-				</Table.Row>
-			</Table.Header>
-			<Table.Body>
-				{#each filtered as project (project.path)}
-					<Table.Row class="hover:bg-accent cursor-pointer" onclick={() => go({ name: 'project', path: project.path })}>
-						<Table.Cell class="text-foreground font-medium">{project.name}</Table.Cell>
-						<Table.Cell class="text-muted-foreground">{project.client ?? '—'}</Table.Cell>
-						<Table.Cell>
-							<span class="flex items-center gap-1.5">
-								<span class="size-1.5 rounded-full" style="background-color: {statusHue(project.status)};"></span>
-								<span class="text-foreground text-[13px] capitalize">{project.status}</span>
-							</span>
-						</Table.Cell>
-						<Table.Cell class="text-muted-foreground font-mono text-[13px]">{deadline(project.dueDate)}</Table.Cell>
-						<Table.Cell>
-							<div class="flex items-center justify-end gap-2">
-								<div class="bg-muted h-1.5 w-16 overflow-hidden rounded-full">
-									<div class="bg-primary h-full rounded-full" style="width: {Math.max(0, Math.min(100, project.progress))}%;"></div>
+	{#if filtered.length}
+		<div class="border-border overflow-hidden rounded-xl border">
+			<Table.Root>
+				<Table.Header>
+					<Table.Row class="hover:bg-transparent">
+						<Table.Head>Project</Table.Head>
+						<Table.Head>Client</Table.Head>
+						<Table.Head>Status</Table.Head>
+						<Table.Head>Deadline</Table.Head>
+						<Table.Head class="text-right">Progress</Table.Head>
+						<Table.Head class="text-right">Budget</Table.Head>
+					</Table.Row>
+				</Table.Header>
+				<Table.Body>
+					{#each filtered as project (project.path)}
+						<Table.Row class="hover:bg-accent cursor-pointer" onclick={() => go({ name: 'project', path: project.path })}>
+							<Table.Cell class="text-foreground font-medium">{project.name}</Table.Cell>
+							<Table.Cell class="text-muted-foreground">{project.client ?? '—'}</Table.Cell>
+							<Table.Cell>
+								<span class="flex items-center gap-1.5">
+									<span class="size-1.5 rounded-full" style="background-color: {statusHue(project.status)};"></span>
+									<span class="text-foreground text-[13px] capitalize">{project.status}</span>
+								</span>
+							</Table.Cell>
+							<Table.Cell class="text-muted-foreground font-mono text-[13px]">{deadline(project.dueDate)}</Table.Cell>
+							<Table.Cell>
+								<div class="flex items-center justify-end gap-2">
+									<div class="bg-muted h-1.5 w-16 overflow-hidden rounded-full">
+										<div class="bg-primary h-full rounded-full" style="width: {Math.max(0, Math.min(100, project.progress))}%;"></div>
+									</div>
+									<span class="text-foreground w-9 text-right font-mono text-xs">{project.progress}%</span>
 								</div>
-								<span class="text-foreground w-9 text-right font-mono text-xs">{project.progress}%</span>
-							</div>
-						</Table.Cell>
-						<Table.Cell class="text-foreground text-right font-mono text-[13px]">{money(project)}</Table.Cell>
-					</Table.Row>
-				{:else}
-					<Table.Row>
-						<Table.Cell colspan={6} class="text-muted-foreground py-6 text-center">No projects yet.</Table.Cell>
-					</Table.Row>
-				{/each}
-			</Table.Body>
-		</Table.Root>
-	</div>
+							</Table.Cell>
+							<Table.Cell class="text-foreground text-right font-mono text-[13px]">{money(project)}</Table.Cell>
+						</Table.Row>
+					{/each}
+				</Table.Body>
+			</Table.Root>
+		</div>
+	{:else}
+		<Empty.Root class="border-border rounded-xl border border-dashed py-12">
+			<Empty.Header>
+				<Empty.Media variant="icon"><FolderKanban /></Empty.Media>
+				<Empty.Title>No projects yet</Empty.Title>
+				<Empty.Description>
+					{search.trim() || filter !== 'all'
+						? 'No projects match your filter.'
+						: 'Create a project and link it to a client.'}
+				</Empty.Description>
+			</Empty.Header>
+			{#if !search.trim() && filter === 'all'}
+				<Empty.Content>
+					<Button size="sm" onclick={() => crm.openModal('new-project', {})}>
+						<Plus data-icon="inline-start" /> New project
+					</Button>
+				</Empty.Content>
+			{/if}
+		</Empty.Root>
+	{/if}
 </div>

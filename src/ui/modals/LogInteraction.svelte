@@ -6,6 +6,7 @@
 	import * as ToggleGroup from '$lib/components/ui/toggle-group';
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
+	import { toast } from 'svelte-sonner';
 
 	let {
 		store,
@@ -63,6 +64,7 @@
 					projectName: project || null,
 				});
 			}
+			toast.success('Interaction logged');
 			close();
 		} finally {
 			saving = false;

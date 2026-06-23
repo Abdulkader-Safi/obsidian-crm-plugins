@@ -4,7 +4,11 @@
 	import type { Go } from '../router';
 	import { getCrm } from '../context';
 	import { statusHue } from '$lib/status';
+	import { toast } from 'svelte-sonner';
+	import * as Empty from '$lib/components/ui/empty';
+	import { Button } from '$lib/components/ui/button';
 	import Plus from '@lucide/svelte/icons/plus';
+	import Kanban from '@lucide/svelte/icons/kanban';
 
 	let { model, go }: { model: CrmModel; go: Go } = $props();
 	const crm = getCrm();
@@ -31,7 +35,11 @@
 		const path = dragPath;
 		overStatus = null;
 		dragPath = null;
-		if (path) void crm.store.setClientStatus(path, status);
+		if (path) {
+			const client = model.clients.find((c) => c.path === path);
+			void crm.store.setClientStatus(path, status);
+			toast.success(`${client?.name ?? 'Client'} → ${STATUS_LABELS[status]}`);
+		}
 	}
 
 	function money(c: Client): string {
@@ -39,6 +47,20 @@
 	}
 </script>
 
+{#if model.clients.length === 0}
+	<Empty.Root class="border-border rounded-xl border border-dashed py-12">
+		<Empty.Header>
+			<Empty.Media variant="icon"><Kanban /></Empty.Media>
+			<Empty.Title>Your pipeline is empty</Empty.Title>
+			<Empty.Description>Add clients to see them across pipeline stages.</Empty.Description>
+		</Empty.Header>
+		<Empty.Content>
+			<Button size="sm" onclick={() => crm.openModal('new-client', {})}>
+				<Plus data-icon="inline-start" /> New client
+			</Button>
+		</Empty.Content>
+	</Empty.Root>
+{:else}
 <div class="flex gap-3 overflow-x-auto pb-2">
 	{#each columns as col (col.status)}
 		<div
@@ -106,3 +128,4 @@
 		</div>
 	{/each}
 </div>
+{/if}
