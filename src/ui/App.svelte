@@ -62,14 +62,15 @@
 				<button
 					type="button"
 					class={cn(
-						'flex cursor-pointer appearance-none items-center gap-1.5 rounded-lg border-0 bg-transparent px-3 py-1.5 text-[13px] font-medium shadow-none transition-colors',
+						'flex cursor-pointer appearance-none items-center gap-1.5 text-[13px] font-medium transition-colors',
+						'rounded-lg! border-0! px-3! py-1.5! shadow-none!',
 						active
-							? 'bg-card text-foreground shadow-sm'
-							: 'text-muted-foreground hover:text-foreground',
+							? 'bg-card! text-foreground! shadow-sm!'
+							: 'bg-transparent! text-muted-foreground! hover:text-foreground!',
 					)}
 					onclick={() => go({ name: tab.name })}
 				>
-					<Icon class={cn('size-4', active && 'text-primary')} />
+					<Icon class={cn('size-4', active && 'text-primary!')} />
 					{tab.label}
 				</button>
 			{/each}
