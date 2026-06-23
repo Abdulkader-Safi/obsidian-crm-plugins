@@ -54,18 +54,18 @@ describe('coercion', () => {
 });
 
 describe('clientFrontmatter', () => {
-	test('builds frontmatter with crm discriminator and defaults', () => {
+	test('builds account frontmatter with crm discriminator, no sales fields', () => {
 		const fm = clientFrontmatter({
 			name: 'CoolPeak AC',
-			status: 'lead',
-			value: 1500,
+			company: 'CoolPeak',
 			currency: 'KWD',
 		});
 		expect(fm.crm).toBe('client');
-		expect(fm.status).toBe('lead');
-		expect(fm.value).toBe(1500);
 		expect(fm.currency).toBe('KWD');
-		expect(fm.company).toBe('');
+		expect(fm.company).toBe('CoolPeak');
+		// sales fields now live on deals, not clients
+		expect('status' in fm).toBe(false);
+		expect('value' in fm).toBe(false);
 	});
 });
 

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { CrmModel, Interaction } from '../../crm/types';
-	import { CLIENT_STATUSES, STATUS_LABELS } from '../../crm/types';
+	import type { CrmModel, Interaction, Deal } from '../../crm/types';
+	import { DEAL_STAGES, DEAL_STAGE_LABELS, OPEN_DEAL_STAGES } from '../../crm/types';
 	import type { Go } from '../router';
 	import { getCrm } from '../context';
 	import * as Card from '$lib/components/ui/card';
@@ -22,12 +22,12 @@
 	const crm = getCrm();
 
 	const pipeline = $derived(
-		CLIENT_STATUSES.map((status) => ({
-			status,
-			count: model.clients.filter((c) => c.status === status).length,
-		})),
+		DEAL_STAGES.map((stage) => {
+			const ds = model.deals.filter((d) => d.stage === stage);
+			return { stage, count: ds.length, value: ds.reduce((s, d) => s + d.value, 0) };
+		}),
 	);
-	const totalClients = $derived(model.clients.length);
+	const totalDeals = $derived(model.deals.length);
 	const stageCount = $derived(pipeline.filter((p) => p.count > 0).length);
 
 	const DAY = 86400000;
@@ -49,10 +49,11 @@
 	}
 
 	const followUps = $derived(
-		model.clients
-			.filter((c) => {
-				const d = daysUntil(c.nextFollowUp);
-				return d !== null && d <= 7;
+		model.deals
+			.filter((d) => {
+				if (!OPEN_DEAL_STAGES.includes(d.stage)) return false;
+				const n = daysUntil(d.nextFollowUp);
+				return n !== null && n <= 7;
 			})
 			.sort((a, b) => (a.nextFollowUp < b.nextFollowUp ? -1 : 1)),
 	);
@@ -61,13 +62,20 @@
 		model.projects.filter((p) => !['completed', 'cancelled'].includes(p.status)),
 	);
 
-	const currency = $derived(model.projects[0]?.currency || model.clients[0]?.currency || '');
-	const totalBudget = $derived(model.projects.reduce((s, p) => s + p.budget, 0));
-	const paid = $derived(
-		model.projects.filter((p) => p.status === 'completed').reduce((s, p) => s + p.budget, 0),
+	// Currency-aware money: figures are per currency, never summed across currencies.
+	const currencies = $derived([...new Set(model.deals.map((d) => d.currency).filter(Boolean))]);
+	const currency = $derived(currencies[0] || model.clients[0]?.currency || 'USD');
+	const wonValue = $derived(
+		model.deals.filter((d) => d.stage === 'won' && d.currency === currency).reduce((s, d) => s + d.value, 0),
 	);
-	const outstanding = $derived(Math.max(0, totalBudget - paid));
-	const paidPct = $derived(totalBudget ? Math.round((paid / totalBudget) * 100) : 0);
+	const openValue = $derived(
+		model.deals
+			.filter((d) => OPEN_DEAL_STAGES.includes(d.stage) && d.currency === currency)
+			.reduce((s, d) => s + d.value, 0),
+	);
+	const wonCount = $derived(model.deals.filter((d) => d.stage === 'won').length);
+	const barTotal = $derived(wonValue + openValue);
+	const wonPct = $derived(barTotal ? Math.round((wonValue / barTotal) * 100) : 0);
 
 	function dayOf(dateStr: string): string {
 		const d = new Date(dateStr);
@@ -99,7 +107,7 @@
 			<div class="flex items-baseline gap-2.5">
 				<h2 class="text-foreground text-base font-semibold">Pipeline</h2>
 				<span class="text-muted-foreground text-[13px]">
-					{totalClients} clients across {stageCount} stage{stageCount === 1 ? '' : 's'}
+					{totalDeals} deal{totalDeals === 1 ? '' : 's'} across {stageCount} stage{stageCount === 1 ? '' : 's'}
 				</span>
 			</div>
 			<button
@@ -110,22 +118,22 @@
 			</button>
 		</div>
 		<div class="border-border flex h-11 gap-0.5 overflow-hidden rounded-lg border">
-			{#if totalClients === 0}
+			{#if totalDeals === 0}
 				<div class="bg-muted flex-1"></div>
 			{:else}
-				{#each pipeline.filter((p) => p.count > 0) as seg (seg.status)}
-					<div style="flex: {seg.count}; background-color: {statusHue(seg.status)};"></div>
+				{#each pipeline.filter((p) => p.count > 0) as seg (seg.stage)}
+					<div style="flex: {seg.count}; background-color: {statusHue(seg.stage)};"></div>
 				{/each}
 			{/if}
 		</div>
 		<div class="flex flex-wrap gap-2">
-			{#each pipeline as seg (seg.status)}
+			{#each pipeline as seg (seg.stage)}
 				<span
 					class="inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs"
-					style="background-color: {statusHue(seg.status)}1f;"
+					style="background-color: {statusHue(seg.stage)}1f;"
 				>
-					<span class="size-2 rounded-full" style="background-color: {statusHue(seg.status)};"></span>
-					<span class="font-semibold" style="color: {statusHue(seg.status)};">{STATUS_LABELS[seg.status]}</span>
+					<span class="size-2 rounded-full" style="background-color: {statusHue(seg.stage)};"></span>
+					<span class="font-semibold" style="color: {statusHue(seg.stage)};">{DEAL_STAGE_LABELS[seg.stage]}</span>
 					<span class="text-foreground font-mono text-[12px]">{seg.count}</span>
 				</span>
 			{/each}
@@ -152,33 +160,35 @@
 					{/if}
 				</div>
 				{#if followUps.length}
-					{#each followUps as client (client.path)}
-						{@const r = reminder(client.nextFollowUp)}
+					{#each followUps as deal (deal.path)}
+						{@const r = reminder(deal.nextFollowUp)}
 							<div class="border-border flex items-center gap-4 border-b px-5 py-3.5 last:border-0">
 							<div class="flex w-10 shrink-0 flex-col items-center">
-								<span class="text-foreground font-mono text-xl font-semibold leading-none">{dayOf(client.nextFollowUp)}</span>
-								<span class="text-muted-foreground mt-0.5 text-[10px] font-semibold tracking-wider">{monthOf(client.nextFollowUp)}</span>
+								<span class="text-foreground font-mono text-xl font-semibold leading-none">{dayOf(deal.nextFollowUp)}</span>
+								<span class="text-muted-foreground mt-0.5 text-[10px] font-semibold tracking-wider">{monthOf(deal.nextFollowUp)}</span>
 							</div>
 							<div class="min-w-0 flex-1">
 								<div class="flex flex-wrap items-center gap-2.5">
-									<button class="text-foreground text-sm font-semibold hover:underline" onclick={() => go({ name: 'client', path: client.path })}>
-										{client.name}
+									<button class="text-foreground text-sm font-semibold hover:underline" onclick={() => crm.openModal('deal-detail', { path: deal.path })}>
+										{deal.client ?? deal.service}
 									</button>
-									{#if client.website || client.company}
-										<span class="text-muted-foreground text-xs">{client.website || client.company}</span>
+									{#if deal.service}
+										<span class="text-muted-foreground text-xs">{deal.service}</span>
 									{/if}
-									<StatusBadge status={client.status} />
+									<StatusBadge status={deal.stage} />
 										{#if r}
 											<span class="rounded-full px-2 py-0.5 text-[11px] font-semibold" style="background-color: {r.hue}22; color: {r.hue};">{r.label}</span>
 										{/if}
 								</div>
-								{#if client.followUpNote}
-									<p class="text-muted-foreground mt-1 text-[13px]">{client.followUpNote}</p>
+								{#if deal.followUpNote}
+									<p class="text-muted-foreground mt-1 text-[13px]">{deal.followUpNote}</p>
 								{/if}
 							</div>
-							<Button variant="outline" size="sm" onclick={() => crm.openModal('log-interaction', { clientName: client.name })}>
-								<MessageSquarePlus data-icon="inline-start" /> Log
-							</Button>
+							{#if deal.client}
+								<Button variant="outline" size="sm" onclick={() => crm.openModal('log-interaction', { clientName: deal.client })}>
+									<MessageSquarePlus data-icon="inline-start" /> Log
+								</Button>
+							{/if}
 						</div>
 					{/each}
 				{:else}
@@ -250,36 +260,37 @@
 						<span class="flex size-7 items-center justify-center rounded-lg" style="background-color: {statusHue('active')}22; color: {statusHue('active')};">
 							<Wallet class="size-4" />
 						</span>
-						<h3 class="text-foreground text-[15px] font-semibold">This month</h3>
+						<h3 class="text-foreground text-[15px] font-semibold">Revenue</h3>
 					</div>
-					<span class="text-muted-foreground font-mono text-xs">
-						{new Date().toLocaleString('en', { month: 'long', year: 'numeric' })}
-					</span>
+					<span class="text-muted-foreground font-mono text-xs">{currency}</span>
 				</div>
 				<div>
 					<div class="flex items-end gap-1.5">
-						<span class="text-foreground font-mono text-4xl font-semibold leading-none">{totalBudget.toLocaleString()}</span>
+						<span class="text-foreground font-mono text-4xl font-semibold leading-none">{wonValue.toLocaleString()}</span>
 						<span class="text-muted-foreground text-sm font-semibold">{currency}</span>
 					</div>
-					<p class="text-muted-foreground mt-1.5 text-xs">Invoiced across {model.projects.length} project{model.projects.length === 1 ? '' : 's'}</p>
+					<p class="text-muted-foreground mt-1.5 text-xs">Won across {wonCount} deal{wonCount === 1 ? '' : 's'}</p>
 				</div>
-				<div class="h-2 overflow-hidden rounded-full" style="background-color: {statusHue('lost')}33;">
-					<div class="h-full rounded-full" style="width: {paidPct}%; background-color: {statusHue('active')};"></div>
+				<div class="h-2 overflow-hidden rounded-full" style="background-color: {statusHue('lead')}33;">
+					<div class="h-full rounded-full" style="width: {wonPct}%; background-color: {statusHue('won')};"></div>
 				</div>
 				<div class="flex justify-between">
 					<div class="flex flex-col gap-1">
 						<span class="text-muted-foreground flex items-center gap-1.5 text-[13px] font-medium">
-							<span class="size-2 rounded-full" style="background-color: {statusHue('active')};"></span> Paid
+							<span class="size-2 rounded-full" style="background-color: {statusHue('won')};"></span> Won
 						</span>
-						<span><span class="text-foreground font-mono text-lg font-semibold">{paid.toLocaleString()}</span> <span class="text-muted-foreground text-[11px]">{currency}</span></span>
+						<span><span class="text-foreground font-mono text-lg font-semibold">{wonValue.toLocaleString()}</span> <span class="text-muted-foreground text-[11px]">{currency}</span></span>
 					</div>
 					<div class="flex flex-col gap-1">
 						<span class="text-muted-foreground flex items-center gap-1.5 text-[13px] font-medium">
-							<span class="size-2 rounded-full" style="background-color: {statusHue('lost')};"></span> Outstanding
+							<span class="size-2 rounded-full" style="background-color: {statusHue('lead')};"></span> Open pipeline
 						</span>
-						<span><span class="text-foreground font-mono text-lg font-semibold">{outstanding.toLocaleString()}</span> <span class="text-muted-foreground text-[11px]">{currency}</span></span>
+						<span><span class="text-foreground font-mono text-lg font-semibold">{openValue.toLocaleString()}</span> <span class="text-muted-foreground text-[11px]">{currency}</span></span>
 					</div>
 				</div>
+				{#if currencies.length > 1}
+					<p class="text-muted-foreground text-[11px]">+ {currencies.length - 1} other currenc{currencies.length - 1 === 1 ? 'y' : 'ies'} not shown</p>
+				{/if}
 			</Card.Root>
 
 			<!-- Recent activity -->

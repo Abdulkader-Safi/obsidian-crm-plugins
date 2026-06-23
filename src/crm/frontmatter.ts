@@ -1,4 +1,4 @@
-import type { ClientStatus, InteractionType, ProjectStatus, DealStage } from './types';
+import type { InteractionType, ProjectStatus, DealStage } from './types';
 
 export function parseWikilink(value: unknown): string | null {
 	if (typeof value !== 'string') return null;
@@ -44,44 +44,32 @@ export function asBool(value: unknown): boolean {
 
 export interface ClientInput {
 	name: string;
-	status: ClientStatus;
 	company?: string;
 	industry?: string;
 	country?: string;
 	region?: string;
-	service?: string;
-	value?: number;
 	currency: string;
-	leadSource?: string;
 	email?: string;
 	phone?: string;
 	website?: string;
 	contact?: string;
 	pitchAs?: string;
-	nextFollowUp?: string;
-	followUpNote?: string;
 	tags?: string[];
 }
 
 export function clientFrontmatter(input: ClientInput): Record<string, unknown> {
 	return {
 		crm: 'client',
-		status: input.status,
 		company: input.company ?? '',
 		industry: input.industry ?? '',
 		country: input.country ?? '',
 		region: input.region ?? '',
-		service: input.service ?? '',
-		value: input.value ?? 0,
 		currency: input.currency,
-		leadSource: input.leadSource ?? '',
 		email: input.email ?? '',
 		phone: input.phone ?? '',
 		website: input.website ?? '',
 		contact: input.contact ?? '',
 		pitchAs: input.pitchAs ?? '',
-		nextFollowUp: input.nextFollowUp ?? '',
-		followUpNote: input.followUpNote ?? '',
 		tags: input.tags ?? [],
 	};
 }

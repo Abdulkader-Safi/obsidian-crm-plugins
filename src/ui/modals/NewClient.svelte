@@ -1,10 +1,9 @@
 <script lang="ts">
 	import type { CrmStore } from '../../crm/store';
-	import { CLIENT_STATUSES, STATUS_LABELS, type ClientStatus, type Client } from '../../crm/types';
+	import type { Client } from '../../crm/types';
 	import { clientFrontmatter } from '../../crm/frontmatter';
 	import { toast } from 'svelte-sonner';
 	import * as Field from '$lib/components/ui/field';
-	import * as Select from '$lib/components/ui/select';
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
 
@@ -19,17 +18,11 @@
 	let industry = $state(c?.industry ?? '');
 	let country = $state(c?.country ?? '');
 	let region = $state(c?.region ?? '');
-	let status = $state<string>(c?.status ?? 'lead');
-	let service = $state(c?.service ?? '');
-	let estValue = $state(c?.value ? String(c.value) : '');
-	let leadSource = $state(c?.leadSource ?? '');
 	let email = $state(c?.email ?? '');
 	let phone = $state(c?.phone ?? '');
 	let website = $state(c?.website ?? '');
 	let contact = $state(c?.contact ?? '');
 	let pitchAs = $state(c?.pitchAs ?? 'Freelance');
-	let nextFollowUp = $state(c?.nextFollowUp ?? '');
-	let followUpNote = $state(c?.followUpNote ?? '');
 	let tags = $state((c?.tags ?? []).join(', '));
 	let saving = $state(false);
 
@@ -40,30 +33,21 @@
 			.filter(Boolean);
 	}
 
-	const statusOptions = CLIENT_STATUSES.map((s) => ({ value: s, label: STATUS_LABELS[s] }));
-	const statusLabel = $derived(STATUS_LABELS[status as ClientStatus] ?? 'Select status');
-
 	async function save() {
 		if (!name.trim() || saving) return;
 		saving = true;
 		const input = {
 			name: name.trim(),
-			status: status as ClientStatus,
 			company,
 			industry,
 			country,
 			region,
-			service,
-			value: Number(estValue) || 0,
 			currency: client?.currency || 'USD',
-			leadSource,
 			email,
 			phone,
 			website,
 			contact,
 			pitchAs,
-			nextFollowUp,
-			followUpNote,
 			tags: parseTags(tags),
 		};
 		try {
@@ -71,7 +55,7 @@
 				await store.updateClient(client.path, clientFrontmatter(input));
 				toast.success(`Updated ${input.name}`);
 			} else {
-				await store.createClient(input, followUpNote);
+				await store.createClient(input);
 				toast.success(`Created ${input.name}`);
 			}
 			close();
@@ -81,7 +65,8 @@
 	}
 </script>
 
-<h2 class="text-foreground mb-4 text-base font-semibold">{isEdit ? 'Edit client' : 'New client'}</h2>
+<h2 class="text-foreground mb-1 text-base font-semibold">{isEdit ? 'Edit client' : 'New client'}</h2>
+<p class="text-muted-foreground mb-4 text-xs">The account. Track opportunities by adding deals to it.</p>
 
 <Field.FieldGroup>
 	<div class="grid grid-cols-2 gap-4">
@@ -98,35 +83,12 @@
 			<Input id="nc-industry" bind:value={industry} />
 		</Field.Field>
 		<Field.Field>
-			<Field.FieldLabel>Status</Field.FieldLabel>
-			<Select.Root type="single" bind:value={status}>
-				<Select.Trigger class="w-full">{statusLabel}</Select.Trigger>
-				<Select.Content>
-					{#each statusOptions as o (o.value)}
-						<Select.Item value={o.value} label={o.label} />
-					{/each}
-				</Select.Content>
-			</Select.Root>
-		</Field.Field>
-		<Field.Field>
 			<Field.FieldLabel for="nc-country">Country</Field.FieldLabel>
 			<Input id="nc-country" bind:value={country} />
 		</Field.Field>
 		<Field.Field>
 			<Field.FieldLabel for="nc-region">Region</Field.FieldLabel>
 			<Input id="nc-region" bind:value={region} />
-		</Field.Field>
-		<Field.Field>
-			<Field.FieldLabel for="nc-service">Service</Field.FieldLabel>
-			<Input id="nc-service" bind:value={service} />
-		</Field.Field>
-		<Field.Field>
-			<Field.FieldLabel for="nc-value">Estimated value</Field.FieldLabel>
-			<Input id="nc-value" type="number" bind:value={estValue} />
-		</Field.Field>
-		<Field.Field>
-			<Field.FieldLabel for="nc-source">Lead source</Field.FieldLabel>
-			<Input id="nc-source" bind:value={leadSource} />
 		</Field.Field>
 		<Field.Field>
 			<Field.FieldLabel for="nc-pitch">Pitch as</Field.FieldLabel>
@@ -148,15 +110,7 @@
 			<Field.FieldLabel for="nc-contact">Primary contact</Field.FieldLabel>
 			<Input id="nc-contact" bind:value={contact} />
 		</Field.Field>
-		<Field.Field>
-			<Field.FieldLabel for="nc-follow">Next follow-up</Field.FieldLabel>
-			<Input id="nc-follow" type="date" bind:value={nextFollowUp} />
-		</Field.Field>
 	</div>
-	<Field.Field>
-		<Field.FieldLabel for="nc-note">Follow-up note</Field.FieldLabel>
-		<Input id="nc-note" bind:value={followUpNote} placeholder="What's the next step?" />
-	</Field.Field>
 	<Field.Field>
 		<Field.FieldLabel for="nc-tags">Tags</Field.FieldLabel>
 		<Input id="nc-tags" bind:value={tags} placeholder="hot-lead, cafe, referral" />
