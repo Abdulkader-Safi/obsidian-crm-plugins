@@ -219,7 +219,7 @@
 		<!-- Right -->
 		<div class="flex shrink-0 flex-col gap-6 lg:w-[380px]">
 			<!-- This month -->
-			<Card.Root class="gap-4">
+			<Card.Root class="gap-4 p-5">
 				<div class="flex items-center justify-between">
 					<div class="flex items-center gap-2.5">
 						<span class="flex size-7 items-center justify-center rounded-lg" style="background-color: {statusHue('active')}22; color: {statusHue('active')};">
