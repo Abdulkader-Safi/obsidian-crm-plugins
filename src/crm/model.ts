@@ -181,6 +181,18 @@ export function buildModel(notes: NoteRecord[]): CrmModel {
 		if (deal.client) byName.get(deal.client)?.deals.push(deal);
 	}
 
+	// Progress derives from work done: completed tasks first, then milestones,
+	// falling back to the stored `progress` number only when there is neither.
+	for (const project of model.projects) {
+		const tasks = model.tasks.filter((t) => t.project === project.name);
+		if (tasks.length) {
+			project.progress = Math.round((tasks.filter((t) => t.done).length / tasks.length) * 100);
+		} else if (project.milestones.length) {
+			const done = project.milestones.filter((m) => m.done).length;
+			project.progress = Math.round((done / project.milestones.length) * 100);
+		}
+	}
+
 	for (const client of model.clients) {
 		client.relationship = deriveRelationship(client);
 	}

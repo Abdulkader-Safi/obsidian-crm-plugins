@@ -138,6 +138,35 @@ describe('buildModel', () => {
 		expect(byName('Past').relationship).toBe('past');
 	});
 
+	test('derives project progress from completed tasks', () => {
+		const m = buildModel([
+			{ path: 'CRM/Projects/Site.md', frontmatter: { crm: 'project', status: 'development', progress: 0 }, body: '' },
+			{ path: 'CRM/Tasks/A.md', frontmatter: { crm: 'task', project: '[[Site]]', done: true }, body: 'A' },
+			{ path: 'CRM/Tasks/B.md', frontmatter: { crm: 'task', project: '[[Site]]', done: true }, body: 'B' },
+			{ path: 'CRM/Tasks/C.md', frontmatter: { crm: 'task', project: '[[Site]]', done: false }, body: 'C' },
+		]);
+		expect(m.projects[0]!.progress).toBe(67);
+	});
+
+	test('derives project progress from milestones when there are no tasks', () => {
+		const m = buildModel([
+			{
+				path: 'CRM/Projects/Site.md',
+				frontmatter: {
+					crm: 'project',
+					status: 'development',
+					progress: 0,
+					milestones: [
+						{ title: 'A', done: true },
+						{ title: 'B', done: false },
+					],
+				},
+				body: '',
+			},
+		]);
+		expect(m.projects[0]!.progress).toBe(50);
+	});
+
 	test('resolves a project deal link', () => {
 		const m = buildModel([
 			{

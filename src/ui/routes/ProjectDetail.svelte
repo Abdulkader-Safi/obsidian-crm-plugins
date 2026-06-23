@@ -83,7 +83,7 @@
 
 	<Card.Root class="gap-2 p-4">
 		<div class="flex items-center justify-between text-sm">
-			<span class="text-muted-foreground">Progress</span>
+			<span class="text-muted-foreground">Progress <span class="text-[11px]">· auto from tasks</span></span>
 			<span class="text-foreground font-mono">{project.progress}%</span>
 		</div>
 		<div class="bg-muted h-2 overflow-hidden rounded-full">
