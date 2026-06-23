@@ -8,7 +8,6 @@
 	import { Checkbox } from '$lib/components/ui/checkbox';
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
 	import TagChip from '$lib/components/TagChip.svelte';
-	import { statusHue } from '$lib/status';
 	import Plus from '@lucide/svelte/icons/plus';
 
 	let { client, go }: { client: Client; go: Go } = $props();
@@ -29,9 +28,6 @@
 		await crm.store.updateClient(client.path, { tags: client.tags.filter((t) => t !== tag) });
 	}
 
-	function money(): string {
-		return client.value ? `${client.value.toLocaleString()} ${client.currency}` : '—';
-	}
 	function initials(name: string): string {
 		return name
 			.split(/\s+/)
@@ -40,13 +36,13 @@
 			.join('');
 	}
 
-	const deal = $derived([
-		['Service', client.service],
-		['Value', money()],
-		['Lead source', client.leadSource],
-		['Next follow-up', client.nextFollowUp],
-		['Pitch as', client.pitchAs],
-	] as const);
+	const REL_HUE: Record<string, string> = { active: '#2E7D52', prospect: '#8A8475', past: '#5E6E7A' };
+	const REL_LABEL: Record<string, string> = { active: 'Active', prospect: 'Prospect', past: 'Past' };
+	const relHue = $derived(REL_HUE[client.relationship] ?? '#8A8475');
+
+	function dealMoney(value: number, currency: string): string {
+		return value ? `${value.toLocaleString()} ${currency}` : '—';
+	}
 
 	const contact = $derived([
 		['Email', client.email],
@@ -73,14 +69,16 @@
 			<div class="flex items-center gap-3">
 				<span
 					class="flex size-11 shrink-0 items-center justify-center rounded-xl text-sm font-semibold"
-					style="background-color: {statusHue(client.status)}22; color: {statusHue(client.status)};"
+					style="background-color: {relHue}22; color: {relHue};"
 				>
 					{initials(client.name)}
 				</span>
 				<div class="flex flex-col gap-1">
 					<div class="flex items-center gap-2">
 						<h1 class="text-foreground text-xl font-semibold">{client.name}</h1>
-						<StatusBadge status={client.status} />
+						<span class="rounded-full px-2 py-0.5 text-xs font-semibold" style="background-color: {relHue}22; color: {relHue};">
+							{REL_LABEL[client.relationship]}
+						</span>
 					</div>
 					{#if client.company || client.country}
 						<p class="text-muted-foreground text-sm">
@@ -136,6 +134,35 @@
 	<div class="flex flex-col gap-4 lg:flex-row">
 		<!-- Left: activity -->
 		<div class="flex min-w-0 flex-1 flex-col gap-4">
+			<Card.Root>
+				<Card.Header class="flex flex-row items-center justify-between">
+					<Card.Title>Deals</Card.Title>
+					<Button size="sm" variant="outline" onclick={() => crm.openModal('new-deal', { clientName: client.name })}>
+						<Plus data-icon="inline-start" /> New deal
+					</Button>
+				</Card.Header>
+				<Card.Content>
+					{#if client.deals.length}
+						<div class="flex flex-col gap-1">
+							{#each client.deals as d (d.path)}
+								<button
+									class="hover:bg-accent -mx-2 flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 text-left"
+									onclick={() => crm.openModal('deal-detail', { path: d.path })}
+								>
+									<span class="flex min-w-0 items-center gap-2">
+										<span class="text-foreground truncate text-sm font-medium">{d.service || d.name}</span>
+										<StatusBadge status={d.stage} />
+									</span>
+									<span class="text-foreground shrink-0 font-mono text-[13px]">{dealMoney(d.value, d.currency)}</span>
+								</button>
+							{/each}
+						</div>
+					{:else}
+						<p class="text-muted-foreground text-sm">No deals yet.</p>
+					{/if}
+				</Card.Content>
+			</Card.Root>
+
 			<Card.Root>
 				<Card.Header><Card.Title>Interaction history</Card.Title></Card.Header>
 				<Card.Content>
@@ -205,19 +232,6 @@
 
 		<!-- Right: details -->
 		<div class="flex shrink-0 flex-col gap-4 lg:w-[320px]">
-			<Card.Root>
-				<Card.Header><Card.Title>Deal</Card.Title></Card.Header>
-				<Card.Content>
-					<dl class="flex flex-col gap-2 text-sm">
-						{#each deal as [term, value] (term)}
-							<div class="flex justify-between gap-3">
-								<dt class="text-muted-foreground">{term}</dt>
-								<dd class="text-foreground text-right">{value || '—'}</dd>
-							</div>
-						{/each}
-					</dl>
-				</Card.Content>
-			</Card.Root>
 			<Card.Root>
 				<Card.Header><Card.Title>Contact</Card.Title></Card.Header>
 				<Card.Content>
