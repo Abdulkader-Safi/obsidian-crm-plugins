@@ -23,6 +23,9 @@ const context = await esbuild.context({
 		esbuildSvelte({
 			compilerOptions: { css: 'injected' },
 			preprocess: sveltePreprocess(),
+			// Third-party components (bits-ui) emit many `state_referenced_locally`
+			// warnings we can't act on. Only surface warnings from our own source.
+			filterWarnings: (warning) => !warning.filename?.includes('node_modules'),
 		}),
 	],
 	mainFields: ['svelte', 'browser', 'module', 'main'],

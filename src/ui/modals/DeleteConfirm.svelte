@@ -9,6 +9,7 @@
 		clientPath,
 	}: { store: CrmStore; close: () => void; clientPath: string } = $props();
 
+	// svelte-ignore state_referenced_locally
 	const client = store.getModel().clients.find((c) => c.path === clientPath);
 	let deleting = $state(false);
 

@@ -13,7 +13,9 @@
 		clientName = '',
 	}: { store: CrmStore; close: () => void; clientName?: string } = $props();
 
+	// svelte-ignore state_referenced_locally
 	const clients = store.getModel().clients;
+	// svelte-ignore state_referenced_locally
 	let client = $state(clientName || (clients[0]?.name ?? ''));
 	let project = $state('');
 	let title = $state('');
