@@ -89,7 +89,7 @@
 		<div class="flex flex-1 items-center justify-end gap-2.5">
 			<div class="relative">
 				<Search class="text-muted-foreground pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2" />
-				<Input bind:value={search} placeholder="Search clients" class="h-9 w-52 pl-8" />
+				<Input bind:value={search} placeholder="Search" class="h-9 w-52 pl-8" />
 			</div>
 			<Button size="sm" class="h-9" onclick={() => crm.openModal('new-client', {})}>
 				<Plus data-icon="inline-start" /> New

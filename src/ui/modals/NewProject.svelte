@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { CrmStore } from '../../crm/store';
-	import { PROJECT_STATUSES, PROJECT_STATUS_LABELS, type ProjectStatus } from '../../crm/types';
+	import { PROJECT_STATUSES, PROJECT_STATUS_LABELS, type ProjectStatus, type Project } from '../../crm/types';
+	import { projectFrontmatter } from '../../crm/frontmatter';
 	import * as Field from '$lib/components/ui/field';
 	import * as Select from '$lib/components/ui/select';
 	import { Input } from '$lib/components/ui/input';
@@ -11,20 +12,24 @@
 		store,
 		close,
 		clientName = '',
-	}: { store: CrmStore; close: () => void; clientName?: string } = $props();
+		project,
+	}: { store: CrmStore; close: () => void; clientName?: string; project?: Project } = $props();
 
 	// svelte-ignore state_referenced_locally
 	const clients = store.getModel().clients;
-
-	let name = $state('');
 	// svelte-ignore state_referenced_locally
-	let client = $state(clientName || (clients[0]?.name ?? ''));
-	let status = $state('discovery');
-	let service = $state('');
-	let budget = $state('');
-	let startDate = $state('');
-	let dueDate = $state('');
-	let paymentTerms = $state('50% upfront, 50% on delivery');
+	const p = project;
+	const isEdit = !!p;
+
+	let name = $state(p?.name ?? '');
+	// svelte-ignore state_referenced_locally
+	let client = $state(p?.client ?? clientName ?? (clients[0]?.name ?? ''));
+	let status = $state(p?.status ?? 'discovery');
+	let service = $state(p?.service ?? '');
+	let budget = $state(p?.budget ? String(p.budget) : '');
+	let startDate = $state(p?.startDate ?? '');
+	let dueDate = $state(p?.dueDate ?? '');
+	let paymentTerms = $state(p?.paymentTerms || '50% upfront, 50% on delivery');
 	let scope = $state('');
 	let saving = $state(false);
 
@@ -45,22 +50,25 @@
 	async function save() {
 		if (!name.trim() || saving) return;
 		saving = true;
+		const input = {
+			name: name.trim(),
+			clientName: client || null,
+			status: status as ProjectStatus,
+			service,
+			budget: Number(budget) || 0,
+			currency,
+			startDate,
+			dueDate,
+			paymentTerms,
+		};
 		try {
-			await store.createProject(
-				{
-					name: name.trim(),
-					clientName: client || null,
-					status: status as ProjectStatus,
-					service,
-					budget: Number(budget) || 0,
-					currency,
-					startDate,
-					dueDate,
-					paymentTerms,
-				},
-				scope,
-			);
-			toast.success(`Created project ${name.trim()}`);
+			if (isEdit && project) {
+				await store.updateProject(project.path, projectFrontmatter(input));
+				toast.success(`Updated ${name.trim()}`);
+			} else {
+				await store.createProject(input, scope);
+				toast.success(`Created project ${name.trim()}`);
+			}
 			close();
 		} finally {
 			saving = false;
@@ -68,13 +76,13 @@
 	}
 </script>
 
-<h2 class="text-foreground mb-1 text-base font-semibold">New project</h2>
+<h2 class="text-foreground mb-1 text-base font-semibold">{isEdit ? 'Edit project' : 'New project'}</h2>
 <p class="text-muted-foreground mb-4 text-xs">Linked to a client, saved in the Projects folder.</p>
 
 <Field.FieldGroup>
 	<Field.Field>
 		<Field.FieldLabel for="np-name">Project name</Field.FieldLabel>
-		<Input id="np-name" bind:value={name} placeholder="e.g. Website redesign" />
+		<Input id="np-name" bind:value={name} placeholder="e.g. Website redesign" disabled={isEdit} />
 	</Field.Field>
 	<div class="grid grid-cols-2 gap-4">
 		<Field.Field>
@@ -127,12 +135,14 @@
 			</Select.Content>
 		</Select.Root>
 	</Field.Field>
-	<Field.Field>
-		<Field.FieldLabel for="np-scope">Scope notes</Field.FieldLabel>
-		<Input id="np-scope" bind:value={scope} placeholder="What's included in this project?" />
-	</Field.Field>
+	{#if !isEdit}
+		<Field.Field>
+			<Field.FieldLabel for="np-scope">Scope notes</Field.FieldLabel>
+			<Input id="np-scope" bind:value={scope} placeholder="What's included in this project?" />
+		</Field.Field>
+	{/if}
 	<Field.Field orientation="horizontal" class="justify-end">
 		<Button variant="outline" size="sm" onclick={close}>Cancel</Button>
-		<Button size="sm" disabled={!name.trim() || saving} onclick={save}>Create project</Button>
+		<Button size="sm" disabled={!name.trim() || saving} onclick={save}>{isEdit ? 'Save changes' : 'Create project'}</Button>
 	</Field.Field>
 </Field.FieldGroup>

@@ -75,6 +75,7 @@
 					{/each}
 				</Select.Content>
 			</Select.Root>
+			<Button size="sm" variant="outline" onclick={() => crm.openModal('new-project', { project })}>Edit</Button>
 			<Button size="sm" variant="outline" onclick={() => crm.openNote(project.path)}>Open note</Button>
 			<Button size="sm" variant="destructive" onclick={remove}>Delete</Button>
 		</div>
