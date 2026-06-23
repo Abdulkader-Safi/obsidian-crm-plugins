@@ -60,6 +60,7 @@ export interface ClientInput {
 	pitchAs?: string;
 	nextFollowUp?: string;
 	followUpNote?: string;
+	tags?: string[];
 }
 
 export function clientFrontmatter(input: ClientInput): Record<string, unknown> {
@@ -81,6 +82,7 @@ export function clientFrontmatter(input: ClientInput): Record<string, unknown> {
 		pitchAs: input.pitchAs ?? '',
 		nextFollowUp: input.nextFollowUp ?? '',
 		followUpNote: input.followUpNote ?? '',
+		tags: input.tags ?? [],
 	};
 }
 

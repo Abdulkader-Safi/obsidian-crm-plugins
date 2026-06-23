@@ -132,6 +132,7 @@ export interface Client {
 	pitchAs: string;
 	nextFollowUp: string;
 	followUpNote: string;
+	tags: string[];
 	interactions: Interaction[];
 	tasks: Task[];
 	projects: Project[];

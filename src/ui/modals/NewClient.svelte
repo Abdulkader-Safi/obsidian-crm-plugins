@@ -30,7 +30,15 @@
 	let pitchAs = $state(c?.pitchAs ?? 'Freelance');
 	let nextFollowUp = $state(c?.nextFollowUp ?? '');
 	let followUpNote = $state(c?.followUpNote ?? '');
+	let tags = $state((c?.tags ?? []).join(', '));
 	let saving = $state(false);
+
+	function parseTags(raw: string): string[] {
+		return raw
+			.split(',')
+			.map((t) => t.trim().replace(/^#/, ''))
+			.filter(Boolean);
+	}
 
 	const statusOptions = CLIENT_STATUSES.map((s) => ({ value: s, label: STATUS_LABELS[s] }));
 	const statusLabel = $derived(STATUS_LABELS[status as ClientStatus] ?? 'Select status');
@@ -56,6 +64,7 @@
 			pitchAs,
 			nextFollowUp,
 			followUpNote,
+			tags: parseTags(tags),
 		};
 		try {
 			if (isEdit && client) {
@@ -147,6 +156,11 @@
 	<Field.Field>
 		<Field.FieldLabel for="nc-note">Follow-up note</Field.FieldLabel>
 		<Input id="nc-note" bind:value={followUpNote} placeholder="What's the next step?" />
+	</Field.Field>
+	<Field.Field>
+		<Field.FieldLabel for="nc-tags">Tags</Field.FieldLabel>
+		<Input id="nc-tags" bind:value={tags} placeholder="hot-lead, cafe, referral" />
+		<Field.FieldDescription>Comma-separated. Stored as a tags list in the note.</Field.FieldDescription>
 	</Field.Field>
 	<Field.Field orientation="horizontal" class="justify-end">
 		<Button variant="outline" size="sm" onclick={close}>Cancel</Button>

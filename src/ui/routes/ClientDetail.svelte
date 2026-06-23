@@ -7,12 +7,27 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Checkbox } from '$lib/components/ui/checkbox';
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
+	import TagChip from '$lib/components/TagChip.svelte';
 	import { statusHue } from '$lib/status';
+	import Plus from '@lucide/svelte/icons/plus';
 
 	let { client, go }: { client: Client; go: Go } = $props();
 	const crm = getCrm();
 
 	let newTask = $state('');
+	let addingTag = $state(false);
+	let newTag = $state('');
+
+	async function addTag() {
+		const tag = newTag.trim().replace(/^#/, '');
+		newTag = '';
+		addingTag = false;
+		if (!tag || client.tags.includes(tag)) return;
+		await crm.store.updateClient(client.path, { tags: [...client.tags, tag] });
+	}
+	async function removeTag(tag: string) {
+		await crm.store.updateClient(client.path, { tags: client.tags.filter((t) => t !== tag) });
+	}
 
 	function money(): string {
 		return client.value ? `${client.value.toLocaleString()} ${client.currency}` : '—';
@@ -84,6 +99,37 @@
 					Delete
 				</Button>
 			</div>
+		</div>
+
+		<div class="mt-3 flex flex-wrap items-center gap-2">
+			{#each client.tags as tag (tag)}
+				<TagChip {tag} onremove={() => removeTag(tag)} />
+			{/each}
+			{#if addingTag}
+				<!-- svelte-ignore a11y_autofocus -->
+				<input
+					autofocus
+					bind:value={newTag}
+					placeholder="tag name"
+					class="border-input bg-background h-6 w-28 rounded-full border px-2.5 text-xs outline-none"
+					onkeydown={(e) => {
+						if (e.key === 'Enter') addTag();
+						if (e.key === 'Escape') {
+							addingTag = false;
+							newTag = '';
+						}
+					}}
+					onblur={addTag}
+				/>
+			{:else}
+				<button
+					type="button"
+					class="border-border text-muted-foreground hover:text-foreground inline-flex cursor-pointer items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs"
+					onclick={() => (addingTag = true)}
+				>
+					<Plus class="size-3" /> Add tag
+				</button>
+			{/if}
 		</div>
 	</div>
 

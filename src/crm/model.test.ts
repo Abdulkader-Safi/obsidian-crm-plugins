@@ -82,6 +82,15 @@ describe('buildModel', () => {
 		expect(m.clients[0]!.status).toBe('lead');
 	});
 
+	test('reads client tags from an array or a single value', () => {
+		const m = buildModel([
+			{ path: 'CRM/Clients/A.md', frontmatter: { crm: 'client', tags: ['hot-lead', 'cafe'] }, body: '' },
+			{ path: 'CRM/Clients/B.md', frontmatter: { crm: 'client', tags: 'referral' }, body: '' },
+		]);
+		expect(m.clients.find((c) => c.name === 'A')!.tags).toEqual(['hot-lead', 'cafe']);
+		expect(m.clients.find((c) => c.name === 'B')!.tags).toEqual(['referral']);
+	});
+
 	test('reads project service, payment terms, and milestones', () => {
 		const m = buildModel([
 			{

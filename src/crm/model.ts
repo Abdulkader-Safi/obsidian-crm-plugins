@@ -59,10 +59,17 @@ function toClient(note: NoteRecord): Client {
 		pitchAs: asString(fm.pitchAs),
 		nextFollowUp: asString(fm.nextFollowUp),
 		followUpNote: asString(fm.followUpNote),
+		tags: toStringArray(fm.tags),
 		interactions: [],
 		tasks: [],
 		projects: [],
 	};
+}
+
+function toStringArray(value: unknown): string[] {
+	if (Array.isArray(value)) return value.map((v) => asString(v)).filter(Boolean);
+	const s = asString(value).trim();
+	return s ? [s] : [];
 }
 
 function toMilestones(value: unknown): { title: string; done: boolean }[] {
