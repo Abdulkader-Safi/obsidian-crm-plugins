@@ -61,11 +61,11 @@
 		</Empty.Content>
 	</Empty.Root>
 {:else}
-<div class="flex gap-3 overflow-x-auto pb-2">
+<div class="flex gap-4 overflow-x-auto pb-2">
 	{#each columns as col (col.status)}
 		<div
 			role="list"
-			class="border-border bg-secondary/40 flex w-56 shrink-0 flex-col gap-2 rounded-xl border p-2 transition-colors"
+			class="border-border bg-secondary/40 flex w-80 shrink-0 flex-col gap-2 rounded-xl border p-3 transition-colors"
 			class:ring-2={overStatus === col.status}
 			class:ring-primary={overStatus === col.status}
 			ondragover={(e) => {
