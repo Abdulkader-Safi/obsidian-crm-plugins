@@ -3,6 +3,7 @@
 	import type { Route } from './router';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
+	import { cn } from '$lib/utils';
 	import Clients from './routes/Clients.svelte';
 	import Dashboard from './routes/Dashboard.svelte';
 	import ClientDetail from './routes/ClientDetail.svelte';
@@ -54,16 +55,21 @@
 			</span>
 		</div>
 
-		<nav class="crm-tabs shrink-0">
+		<nav class="border-border bg-secondary/40 flex shrink-0 items-center gap-1 rounded-xl border p-1">
 			{#each tabs as tab (tab.name)}
 				{@const Icon = tab.icon}
+				{@const active = route.name === tab.name}
 				<button
 					type="button"
-					class="crm-tab"
-					data-active={route.name === tab.name}
+					class={cn(
+						'flex cursor-pointer appearance-none items-center gap-1.5 rounded-lg border-0 bg-transparent px-3 py-1.5 text-[13px] font-medium shadow-none transition-colors',
+						active
+							? 'bg-card text-foreground shadow-sm'
+							: 'text-muted-foreground hover:text-foreground',
+					)}
 					onclick={() => go({ name: tab.name })}
 				>
-					<Icon />
+					<Icon class={cn('size-4', active && 'text-primary')} />
 					{tab.label}
 				</button>
 			{/each}
