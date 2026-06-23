@@ -65,6 +65,19 @@ function toClient(note: NoteRecord): Client {
 	};
 }
 
+function toMilestones(value: unknown): { title: string; done: boolean }[] {
+	if (!Array.isArray(value)) return [];
+	return value
+		.map((m) => {
+			if (m && typeof m === 'object') {
+				const rec = m as Record<string, unknown>;
+				return { title: asString(rec.title), done: asBool(rec.done) };
+			}
+			return { title: asString(m), done: false };
+		})
+		.filter((m) => m.title);
+}
+
 function toProject(note: NoteRecord): Project {
 	const fm = note.frontmatter;
 	return {
@@ -72,11 +85,14 @@ function toProject(note: NoteRecord): Project {
 		name: noteBasename(note.path),
 		client: parseWikilink(fm.client),
 		status: projectStatus(fm.status),
+		service: asString(fm.service),
 		progress: asNumber(fm.progress),
 		budget: asNumber(fm.budget),
 		currency: asString(fm.currency),
 		startDate: asString(fm.startDate),
 		dueDate: asString(fm.dueDate),
+		paymentTerms: asString(fm.paymentTerms),
+		milestones: toMilestones(fm.milestones),
 	};
 }
 

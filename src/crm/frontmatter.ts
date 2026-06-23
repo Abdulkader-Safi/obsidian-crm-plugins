@@ -1,4 +1,4 @@
-import type { ClientStatus, InteractionType } from './types';
+import type { ClientStatus, InteractionType, ProjectStatus } from './types';
 
 export function parseWikilink(value: unknown): string | null {
 	if (typeof value !== 'string') return null;
@@ -109,6 +109,35 @@ export function interactionFrontmatter(
 		nextAction: input.nextAction ?? '',
 	};
 	if (input.projectName) fm.project = toWikilink(input.projectName);
+	return fm;
+}
+
+export interface ProjectInput {
+	name: string;
+	clientName?: string | null;
+	status: ProjectStatus;
+	service?: string;
+	progress?: number;
+	budget?: number;
+	currency: string;
+	startDate?: string;
+	dueDate?: string;
+	paymentTerms?: string;
+}
+
+export function projectFrontmatter(input: ProjectInput): Record<string, unknown> {
+	const fm: Record<string, unknown> = {
+		crm: 'project',
+		status: input.status,
+		service: input.service ?? '',
+		progress: input.progress ?? 0,
+		budget: input.budget ?? 0,
+		currency: input.currency,
+		startDate: input.startDate ?? '',
+		dueDate: input.dueDate ?? '',
+		paymentTerms: input.paymentTerms ?? '',
+	};
+	if (input.clientName) fm.client = toWikilink(input.clientName);
 	return fm;
 }
 

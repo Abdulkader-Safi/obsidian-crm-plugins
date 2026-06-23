@@ -6,6 +6,7 @@ import {
 	asNumber,
 	asBool,
 	clientFrontmatter,
+	projectFrontmatter,
 } from './frontmatter';
 
 describe('parseWikilink', () => {
@@ -64,5 +65,25 @@ describe('clientFrontmatter', () => {
 		expect(fm.value).toBe(1500);
 		expect(fm.currency).toBe('KWD');
 		expect(fm.company).toBe('');
+	});
+});
+
+describe('projectFrontmatter', () => {
+	test('builds project frontmatter with client wikilink', () => {
+		const fm = projectFrontmatter({
+			name: 'Site',
+			clientName: 'CoolPeak AC',
+			status: 'discovery',
+			currency: 'KWD',
+			budget: 900,
+		});
+		expect(fm.crm).toBe('project');
+		expect(fm.status).toBe('discovery');
+		expect(fm.client).toBe('[[CoolPeak AC]]');
+		expect(fm.budget).toBe(900);
+	});
+	test('omits client when not provided', () => {
+		const fm = projectFrontmatter({ name: 'Site', status: 'discovery', currency: 'USD' });
+		expect('client' in fm).toBe(false);
 	});
 });

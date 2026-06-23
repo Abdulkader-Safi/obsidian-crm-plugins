@@ -102,6 +102,51 @@ describe('toggleTask', () => {
 	});
 });
 
+describe('createProject', () => {
+	test('writes a project note linked to the client', async () => {
+		const { adapter, store } = makeStore();
+		const path = await store.createProject(
+			{ name: 'CoolPeak Site', clientName: 'CoolPeak AC', status: 'discovery', currency: 'KWD', budget: 900 },
+			'Scope notes',
+		);
+		expect(path).toBe('CRM/Projects/CoolPeak Site.md');
+		const created = adapter.created[0]!;
+		expect(created.folder).toBe('CRM/Projects');
+		expect(created.frontmatter.crm).toBe('project');
+		expect(created.frontmatter.client).toBe('[[CoolPeak AC]]');
+		expect(created.frontmatter.budget).toBe(900);
+		expect(store.getModel().projects).toHaveLength(1);
+	});
+});
+
+describe('setClientStatus', () => {
+	test('patches the client status', async () => {
+		const { adapter, store } = makeStore();
+		adapter.notes = [
+			{ path: 'CRM/Clients/A.md', frontmatter: { crm: 'client', status: 'lead' }, body: '' },
+		];
+		store.reindex();
+		await store.setClientStatus('CRM/Clients/A.md', 'active');
+		expect(adapter.patched[0]).toEqual({ path: 'CRM/Clients/A.md', patch: { status: 'active' } });
+		expect(store.getModel().clients[0]!.status).toBe('active');
+	});
+});
+
+describe('deleteProject', () => {
+	test('deletes the project note and its tasks', async () => {
+		const { adapter, store } = makeStore();
+		adapter.notes = [
+			{ path: 'CRM/Projects/Site.md', frontmatter: { crm: 'project', status: 'discovery' }, body: '' },
+			{ path: 'CRM/Tasks/T.md', frontmatter: { crm: 'task', project: '[[Site]]' }, body: '' },
+			{ path: 'CRM/Tasks/Other.md', frontmatter: { crm: 'task' }, body: '' },
+		];
+		store.reindex();
+		const project = store.getModel().projects[0]!;
+		await store.deleteProject(project);
+		expect(adapter.deleted.sort()).toEqual(['CRM/Projects/Site.md', 'CRM/Tasks/T.md'].sort());
+	});
+});
+
 describe('deleteClient', () => {
 	test('deletes the client note and all linked notes', async () => {
 		const { adapter, store } = makeStore();

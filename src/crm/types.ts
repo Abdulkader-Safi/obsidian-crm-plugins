@@ -92,16 +92,24 @@ export interface Task {
 	description: string;
 }
 
+export interface Milestone {
+	title: string;
+	done: boolean;
+}
+
 export interface Project {
 	path: string;
 	name: string;
 	client: string | null;
 	status: ProjectStatus;
+	service: string;
 	progress: number;
 	budget: number;
 	currency: string;
 	startDate: string;
 	dueDate: string;
+	paymentTerms: string;
+	milestones: Milestone[];
 }
 
 export interface Client {

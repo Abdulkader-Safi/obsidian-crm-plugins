@@ -81,4 +81,28 @@ describe('buildModel', () => {
 		]);
 		expect(m.clients[0]!.status).toBe('lead');
 	});
+
+	test('reads project service, payment terms, and milestones', () => {
+		const m = buildModel([
+			{
+				path: 'CRM/Projects/Site.md',
+				frontmatter: {
+					crm: 'project',
+					status: 'development',
+					service: 'Website',
+					paymentTerms: '50% upfront',
+					milestones: [
+						{ title: 'Discovery', done: true },
+						{ title: 'Design', done: false },
+					],
+				},
+				body: '',
+			},
+		]);
+		const p = m.projects[0]!;
+		expect(p.service).toBe('Website');
+		expect(p.paymentTerms).toBe('50% upfront');
+		expect(p.milestones).toHaveLength(2);
+		expect(p.milestones[0]).toEqual({ title: 'Discovery', done: true });
+	});
 });

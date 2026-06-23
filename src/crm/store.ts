@@ -2,12 +2,14 @@ import { buildModel, emptyModel, type NoteRecord } from './model';
 import {
 	clientFrontmatter,
 	interactionFrontmatter,
+	projectFrontmatter,
 	taskFrontmatter,
 	type ClientInput,
 	type InteractionInput,
+	type ProjectInput,
 	type TaskInput,
 } from './frontmatter';
-import type { Client, CrmModel } from './types';
+import type { Client, CrmModel, ClientStatus, Project } from './types';
 
 export interface VaultAdapter {
 	listNotes(): NoteRecord[];
@@ -95,6 +97,52 @@ export class CrmStore {
 
 	async toggleTask(path: string, done: boolean): Promise<void> {
 		await this.adapter.updateFrontmatter(path, { done });
+		this.reindex();
+	}
+
+	async updateClient(path: string, patch: Record<string, unknown>): Promise<void> {
+		await this.adapter.updateFrontmatter(path, patch);
+		this.reindex();
+	}
+
+	async setClientStatus(path: string, status: ClientStatus): Promise<void> {
+		await this.adapter.updateFrontmatter(path, { status });
+		this.reindex();
+	}
+
+	async createProject(input: ProjectInput, body = ''): Promise<string> {
+		const path = await this.adapter.createNote(
+			this.folder('Projects'),
+			sanitizeFileName(input.name),
+			projectFrontmatter(input),
+			body,
+		);
+		this.reindex();
+		return path;
+	}
+
+	async updateProject(path: string, patch: Record<string, unknown>): Promise<void> {
+		await this.adapter.updateFrontmatter(path, patch);
+		this.reindex();
+	}
+
+	async updateInteraction(
+		path: string,
+		patch: Record<string, unknown>,
+	): Promise<void> {
+		await this.adapter.updateFrontmatter(path, patch);
+		this.reindex();
+	}
+
+	async deleteProject(project: Project): Promise<void> {
+		const tasks = this.model.tasks.filter((t) => t.project === project.name);
+		await this.adapter.deleteNote(project.path);
+		for (const task of tasks) await this.adapter.deleteNote(task.path);
+		this.reindex();
+	}
+
+	async deleteNote(path: string): Promise<void> {
+		await this.adapter.deleteNote(path);
 		this.reindex();
 	}
 
