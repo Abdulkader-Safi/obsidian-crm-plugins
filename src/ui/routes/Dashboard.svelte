@@ -84,7 +84,10 @@
 					{totalClients} clients across {stageCount} stage{stageCount === 1 ? '' : 's'}
 				</span>
 			</div>
-			<button class="text-primary flex items-center gap-1.5 text-[13px] font-medium hover:underline">
+			<button
+				class="text-primary flex items-center gap-1.5 text-[13px] font-medium hover:underline"
+				onclick={() => go({ name: 'pipeline' })}
+			>
 				Open board <ArrowRight class="size-3.5" />
 			</button>
 		</div>

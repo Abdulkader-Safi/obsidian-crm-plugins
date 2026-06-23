@@ -9,6 +9,7 @@
 	import ClientDetail from './routes/ClientDetail.svelte';
 	import Projects from './routes/Projects.svelte';
 	import ProjectDetail from './routes/ProjectDetail.svelte';
+	import Pipeline from './routes/Pipeline.svelte';
 	import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
 	import Kanban from '@lucide/svelte/icons/kanban';
 	import Users from '@lucide/svelte/icons/users';
@@ -98,6 +99,8 @@
 	<main class="flex-1 overflow-auto p-7">
 		{#if route.name === 'dashboard'}
 			<Dashboard {model} {go} />
+		{:else if route.name === 'pipeline'}
+			<Pipeline {model} {go} />
 		{:else if route.name === 'clients'}
 			<Clients {model} {search} {go} />
 		{:else if route.name === 'client'}
@@ -114,10 +117,6 @@
 			{:else}
 				<p class="text-muted-foreground text-sm">Project not found.</p>
 			{/if}
-		{:else}
-			<div class="text-muted-foreground flex h-full items-center justify-center text-sm">
-				Pipeline board arrives in the next step.
-			</div>
 		{/if}
 	</main>
 </div>
