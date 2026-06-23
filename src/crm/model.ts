@@ -2,13 +2,18 @@ import {
 	CLIENT_STATUSES,
 	PROJECT_STATUSES,
 	INTERACTION_TYPES,
+	DEAL_STAGES,
+	OPEN_DEAL_STAGES,
 	type Client,
 	type Project,
 	type Interaction,
 	type Task,
+	type Deal,
 	type ClientStatus,
 	type ProjectStatus,
 	type InteractionType,
+	type DealStage,
+	type ClientRelationship,
 	type CrmModel,
 } from './types';
 import { parseWikilink, noteBasename, asString, asNumber, asBool } from './frontmatter';
@@ -20,7 +25,7 @@ export interface NoteRecord {
 }
 
 export function emptyModel(): CrmModel {
-	return { clients: [], projects: [], interactions: [], tasks: [] };
+	return { clients: [], projects: [], interactions: [], tasks: [], deals: [] };
 }
 
 function clientStatus(value: unknown): ClientStatus {
@@ -36,6 +41,11 @@ function projectStatus(value: unknown): ProjectStatus {
 function interactionType(value: unknown): InteractionType {
 	const v = asString(value) as InteractionType;
 	return INTERACTION_TYPES.includes(v) ? v : 'note';
+}
+
+function dealStage(value: unknown): DealStage {
+	const v = asString(value) as DealStage;
+	return DEAL_STAGES.includes(v) ? v : 'lead';
 }
 
 function toClient(note: NoteRecord): Client {
@@ -60,9 +70,31 @@ function toClient(note: NoteRecord): Client {
 		nextFollowUp: asString(fm.nextFollowUp),
 		followUpNote: asString(fm.followUpNote),
 		tags: toStringArray(fm.tags),
+		relationship: 'prospect',
 		interactions: [],
 		tasks: [],
 		projects: [],
+		deals: [],
+	};
+}
+
+function toDeal(note: NoteRecord): Deal {
+	const fm = note.frontmatter;
+	return {
+		path: note.path,
+		name: noteBasename(note.path),
+		client: parseWikilink(fm.client),
+		stage: dealStage(fm.stage),
+		value: asNumber(fm.value),
+		currency: asString(fm.currency),
+		service: asString(fm.service),
+		source: asString(fm.source),
+		expectedClose: asString(fm.expectedClose),
+		nextFollowUp: asString(fm.nextFollowUp),
+		followUpNote: asString(fm.followUpNote),
+		outcomeReason: asString(fm.outcomeReason),
+		opened: asString(fm.opened),
+		notes: note.body.trim(),
 	};
 }
 
@@ -91,6 +123,7 @@ function toProject(note: NoteRecord): Project {
 		path: note.path,
 		name: noteBasename(note.path),
 		client: parseWikilink(fm.client),
+		deal: parseWikilink(fm.deal),
 		status: projectStatus(fm.status),
 		service: asString(fm.service),
 		progress: asNumber(fm.progress),
@@ -142,6 +175,7 @@ export function buildModel(notes: NoteRecord[]): CrmModel {
 		else if (kind === 'project') model.projects.push(toProject(note));
 		else if (kind === 'interaction') model.interactions.push(toInteraction(note));
 		else if (kind === 'task') model.tasks.push(toTask(note));
+		else if (kind === 'deal') model.deals.push(toDeal(note));
 	}
 
 	const byName = new Map<string, Client>();
@@ -156,6 +190,13 @@ export function buildModel(notes: NoteRecord[]): CrmModel {
 	for (const task of model.tasks) {
 		if (task.client) byName.get(task.client)?.tasks.push(task);
 	}
+	for (const deal of model.deals) {
+		if (deal.client) byName.get(deal.client)?.deals.push(deal);
+	}
+
+	for (const client of model.clients) {
+		client.relationship = deriveRelationship(client);
+	}
 
 	const byDateDesc = (a: { date: string }, b: { date: string }) =>
 		b.date.localeCompare(a.date);
@@ -166,4 +207,14 @@ export function buildModel(notes: NoteRecord[]): CrmModel {
 	model.clients.sort((a, b) => a.name.localeCompare(b.name));
 
 	return model;
+}
+
+function deriveRelationship(client: Client): ClientRelationship {
+	const hasOpenDeal = client.deals.some((d) => OPEN_DEAL_STAGES.includes(d.stage));
+	const hasActiveProject = client.projects.some(
+		(p) => p.status !== 'completed' && p.status !== 'cancelled',
+	);
+	if (hasOpenDeal || hasActiveProject) return 'active';
+	if (client.deals.length > 0 || client.projects.length > 0) return 'past';
+	return 'prospect';
 }

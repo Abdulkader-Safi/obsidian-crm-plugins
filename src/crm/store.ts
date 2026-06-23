@@ -4,12 +4,14 @@ import {
 	interactionFrontmatter,
 	projectFrontmatter,
 	taskFrontmatter,
+	dealFrontmatter,
 	type ClientInput,
 	type InteractionInput,
 	type ProjectInput,
 	type TaskInput,
+	type DealInput,
 } from './frontmatter';
-import type { Client, CrmModel, ClientStatus, Project } from './types';
+import type { Client, CrmModel, ClientStatus, Project, Deal, DealStage } from './types';
 
 export interface VaultAdapter {
 	listNotes(): NoteRecord[];
@@ -146,12 +148,51 @@ export class CrmStore {
 		this.reindex();
 	}
 
+	async createDeal(input: DealInput, body = ''): Promise<string> {
+		const path = await this.adapter.createNote(
+			this.folder('Deals'),
+			sanitizeFileName(input.name),
+			dealFrontmatter(input),
+			body,
+		);
+		this.reindex();
+		return path;
+	}
+
+	async updateDeal(path: string, patch: Record<string, unknown>): Promise<void> {
+		await this.adapter.updateFrontmatter(path, patch);
+		this.reindex();
+	}
+
+	async setDealStage(path: string, stage: DealStage): Promise<void> {
+		await this.adapter.updateFrontmatter(path, { stage });
+		this.reindex();
+	}
+
+	async deleteDeal(deal: Deal): Promise<void> {
+		await this.adapter.deleteNote(deal.path);
+		this.reindex();
+	}
+
+	async convertDealToProject(deal: Deal, input: ProjectInput): Promise<string> {
+		const path = await this.adapter.createNote(
+			this.folder('Projects'),
+			sanitizeFileName(input.name),
+			projectFrontmatter({ ...input, dealName: deal.name, clientName: deal.client }),
+			'',
+		);
+		await this.adapter.updateFrontmatter(deal.path, { stage: 'won' });
+		this.reindex();
+		return path;
+	}
+
 	async deleteClient(client: Client): Promise<void> {
 		const targets = [
 			client.path,
 			...client.projects.map((p) => p.path),
 			...client.interactions.map((i) => i.path),
 			...client.tasks.map((t) => t.path),
+			...client.deals.map((d) => d.path),
 		];
 		for (const path of targets) await this.adapter.deleteNote(path);
 		this.reindex();

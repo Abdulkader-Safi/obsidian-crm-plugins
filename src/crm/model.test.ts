@@ -114,4 +114,44 @@ describe('buildModel', () => {
 		expect(p.milestones).toHaveLength(2);
 		expect(p.milestones[0]).toEqual({ title: 'Discovery', done: true });
 	});
+
+	test('indexes deals and attaches them to clients', () => {
+		const m = buildModel([
+			{ path: 'CRM/Clients/CoolPeak AC.md', frontmatter: { crm: 'client' }, body: '' },
+			{
+				path: 'CRM/Deals/CoolPeak Website.md',
+				frontmatter: { crm: 'deal', client: '[[CoolPeak AC]]', stage: 'proposal', value: 1500 },
+				body: '',
+			},
+		]);
+		expect(m.deals).toHaveLength(1);
+		const client = m.clients[0]!;
+		expect(client.deals).toHaveLength(1);
+		expect(client.deals[0]!.stage).toBe('proposal');
+	});
+
+	test('derives client relationship from deals and projects', () => {
+		const m = buildModel([
+			{ path: 'CRM/Clients/Prospect.md', frontmatter: { crm: 'client' }, body: '' },
+			{ path: 'CRM/Clients/Active.md', frontmatter: { crm: 'client' }, body: '' },
+			{ path: 'CRM/Clients/Past.md', frontmatter: { crm: 'client' }, body: '' },
+			{ path: 'CRM/Deals/D1.md', frontmatter: { crm: 'deal', client: '[[Active]]', stage: 'negotiating' }, body: '' },
+			{ path: 'CRM/Deals/D2.md', frontmatter: { crm: 'deal', client: '[[Past]]', stage: 'won' }, body: '' },
+		]);
+		const byName = (n: string) => m.clients.find((c) => c.name === n)!;
+		expect(byName('Prospect').relationship).toBe('prospect');
+		expect(byName('Active').relationship).toBe('active');
+		expect(byName('Past').relationship).toBe('past');
+	});
+
+	test('resolves a project deal link', () => {
+		const m = buildModel([
+			{
+				path: 'CRM/Projects/Site.md',
+				frontmatter: { crm: 'project', status: 'discovery', deal: '[[CoolPeak Website]]' },
+				body: '',
+			},
+		]);
+		expect(m.projects[0]!.deal).toBe('CoolPeak Website');
+	});
 });

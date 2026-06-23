@@ -16,6 +16,22 @@ export type ProjectStatus =
 
 export type InteractionType = 'call' | 'meeting' | 'email' | 'followup' | 'note';
 
+export type DealStage = 'lead' | 'proposal' | 'negotiating' | 'won' | 'lost';
+
+export type ClientRelationship = 'prospect' | 'active' | 'past';
+
+export const DEAL_STAGES: DealStage[] = ['lead', 'proposal', 'negotiating', 'won', 'lost'];
+
+export const DEAL_STAGE_LABELS: Record<DealStage, string> = {
+	lead: 'Lead',
+	proposal: 'Proposal',
+	negotiating: 'Negotiating',
+	won: 'Won',
+	lost: 'Lost',
+};
+
+export const OPEN_DEAL_STAGES: DealStage[] = ['lead', 'proposal', 'negotiating'];
+
 export const CLIENT_STATUSES: ClientStatus[] = [
 	'lead',
 	'proposal',
@@ -97,10 +113,28 @@ export interface Milestone {
 	done: boolean;
 }
 
+export interface Deal {
+	path: string;
+	name: string;
+	client: string | null;
+	stage: DealStage;
+	value: number;
+	currency: string;
+	service: string;
+	source: string;
+	expectedClose: string;
+	nextFollowUp: string;
+	followUpNote: string;
+	outcomeReason: string;
+	opened: string;
+	notes: string;
+}
+
 export interface Project {
 	path: string;
 	name: string;
 	client: string | null;
+	deal: string | null;
 	status: ProjectStatus;
 	service: string;
 	progress: number;
@@ -133,9 +167,11 @@ export interface Client {
 	nextFollowUp: string;
 	followUpNote: string;
 	tags: string[];
+	relationship: ClientRelationship;
 	interactions: Interaction[];
 	tasks: Task[];
 	projects: Project[];
+	deals: Deal[];
 }
 
 export interface CrmModel {
@@ -143,4 +179,5 @@ export interface CrmModel {
 	projects: Project[];
 	interactions: Interaction[];
 	tasks: Task[];
+	deals: Deal[];
 }

@@ -132,6 +132,54 @@ describe('setClientStatus', () => {
 	});
 });
 
+describe('createDeal', () => {
+	test('writes a deal note in the Deals folder linked to the client', async () => {
+		const { adapter, store } = makeStore();
+		const path = await store.createDeal({
+			name: 'CoolPeak Website',
+			clientName: 'CoolPeak AC',
+			stage: 'lead',
+			currency: 'KWD',
+			value: 1500,
+			service: 'Website',
+		});
+		expect(path).toBe('CRM/Deals/CoolPeak Website.md');
+		expect(adapter.created[0]!.folder).toBe('CRM/Deals');
+		expect(adapter.created[0]!.frontmatter.crm).toBe('deal');
+		expect(adapter.created[0]!.frontmatter.client).toBe('[[CoolPeak AC]]');
+		expect(store.getModel().deals).toHaveLength(1);
+	});
+});
+
+describe('setDealStage', () => {
+	test('patches the deal stage', async () => {
+		const { adapter, store } = makeStore();
+		adapter.notes = [
+			{ path: 'CRM/Deals/D.md', frontmatter: { crm: 'deal', stage: 'lead' }, body: '' },
+		];
+		store.reindex();
+		await store.setDealStage('CRM/Deals/D.md', 'won');
+		expect(adapter.patched[0]).toEqual({ path: 'CRM/Deals/D.md', patch: { stage: 'won' } });
+	});
+});
+
+describe('convertDealToProject', () => {
+	test('creates a project linked to the deal and marks the deal won', async () => {
+		const { adapter, store } = makeStore();
+		adapter.notes = [
+			{ path: 'CRM/Deals/CoolPeak Website.md', frontmatter: { crm: 'deal', client: '[[CoolPeak AC]]', stage: 'negotiating' }, body: '' },
+		];
+		store.reindex();
+		const deal = store.getModel().deals[0]!;
+		await store.convertDealToProject(deal, { name: 'CoolPeak Site', status: 'discovery', currency: 'KWD' });
+		const created = adapter.created[0]!;
+		expect(created.folder).toBe('CRM/Projects');
+		expect(created.frontmatter.deal).toBe('[[CoolPeak Website]]');
+		expect(created.frontmatter.client).toBe('[[CoolPeak AC]]');
+		expect(adapter.patched.find((p) => p.path === 'CRM/Deals/CoolPeak Website.md')?.patch).toEqual({ stage: 'won' });
+	});
+});
+
 describe('deleteProject', () => {
 	test('deletes the project note and its tasks', async () => {
 		const { adapter, store } = makeStore();

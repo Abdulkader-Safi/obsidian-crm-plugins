@@ -7,6 +7,7 @@ import {
 	asBool,
 	clientFrontmatter,
 	projectFrontmatter,
+	dealFrontmatter,
 } from './frontmatter';
 
 describe('parseWikilink', () => {
@@ -85,5 +86,27 @@ describe('projectFrontmatter', () => {
 	test('omits client when not provided', () => {
 		const fm = projectFrontmatter({ name: 'Site', status: 'discovery', currency: 'USD' });
 		expect('client' in fm).toBe(false);
+	});
+	test('writes a deal link when provided', () => {
+		const fm = projectFrontmatter({ name: 'Site', dealName: 'Site deal', status: 'discovery', currency: 'USD' });
+		expect(fm.deal).toBe('[[Site deal]]');
+	});
+});
+
+describe('dealFrontmatter', () => {
+	test('builds deal frontmatter with client wikilink and stage', () => {
+		const fm = dealFrontmatter({
+			name: 'CoolPeak AC - Website',
+			clientName: 'CoolPeak AC',
+			stage: 'proposal',
+			value: 1500,
+			currency: 'KWD',
+			service: 'Website',
+		});
+		expect(fm.crm).toBe('deal');
+		expect(fm.stage).toBe('proposal');
+		expect(fm.client).toBe('[[CoolPeak AC]]');
+		expect(fm.value).toBe(1500);
+		expect(fm.service).toBe('Website');
 	});
 });

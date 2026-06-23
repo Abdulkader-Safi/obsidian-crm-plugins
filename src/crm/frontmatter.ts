@@ -1,4 +1,4 @@
-import type { ClientStatus, InteractionType, ProjectStatus } from './types';
+import type { ClientStatus, InteractionType, ProjectStatus, DealStage } from './types';
 
 export function parseWikilink(value: unknown): string | null {
 	if (typeof value !== 'string') return null;
@@ -117,6 +117,7 @@ export function interactionFrontmatter(
 export interface ProjectInput {
 	name: string;
 	clientName?: string | null;
+	dealName?: string | null;
 	status: ProjectStatus;
 	service?: string;
 	progress?: number;
@@ -138,6 +139,40 @@ export function projectFrontmatter(input: ProjectInput): Record<string, unknown>
 		startDate: input.startDate ?? '',
 		dueDate: input.dueDate ?? '',
 		paymentTerms: input.paymentTerms ?? '',
+	};
+	if (input.clientName) fm.client = toWikilink(input.clientName);
+	if (input.dealName) fm.deal = toWikilink(input.dealName);
+	return fm;
+}
+
+export interface DealInput {
+	name: string;
+	clientName?: string | null;
+	stage: DealStage;
+	value?: number;
+	currency: string;
+	service?: string;
+	source?: string;
+	expectedClose?: string;
+	nextFollowUp?: string;
+	followUpNote?: string;
+	outcomeReason?: string;
+	opened?: string;
+}
+
+export function dealFrontmatter(input: DealInput): Record<string, unknown> {
+	const fm: Record<string, unknown> = {
+		crm: 'deal',
+		stage: input.stage,
+		value: input.value ?? 0,
+		currency: input.currency,
+		service: input.service ?? '',
+		source: input.source ?? '',
+		expectedClose: input.expectedClose ?? '',
+		nextFollowUp: input.nextFollowUp ?? '',
+		followUpNote: input.followUpNote ?? '',
+		outcomeReason: input.outcomeReason ?? '',
+		opened: input.opened ?? '',
 	};
 	if (input.clientName) fm.client = toWikilink(input.clientName);
 	return fm;
