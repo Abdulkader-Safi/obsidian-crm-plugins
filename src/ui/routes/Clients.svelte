@@ -1,12 +1,14 @@
 <script lang="ts">
-	import type { CrmModel, Client, ClientStatus } from '../../crm/types';
+	import type { CrmModel, Client } from '../../crm/types';
 	import { CLIENT_STATUSES, STATUS_LABELS } from '../../crm/types';
 	import type { Go } from '../router';
-	import StatusPill from '../components/StatusPill.svelte';
+	import * as Table from '$lib/components/ui/table';
+	import * as ToggleGroup from '$lib/components/ui/toggle-group';
+	import StatusBadge from '$lib/components/StatusBadge.svelte';
 
 	let { model, search, go }: { model: CrmModel; search: string; go: Go } = $props();
 
-	let filter = $state<ClientStatus | 'all'>('all');
+	let filter = $state('all');
 
 	const filtered = $derived(
 		model.clients.filter((c) => {
@@ -23,51 +25,42 @@
 	}
 </script>
 
-<div class="mb-3 flex flex-wrap items-center gap-1">
-	<button
-		class="rounded px-2 py-1 text-xs"
-		class:bg-secondary={filter === 'all'}
-		class:text-muted-foreground={filter !== 'all'}
-		onclick={() => (filter = 'all')}>All</button
-	>
-	{#each CLIENT_STATUSES as status (status)}
-		<button
-			class="rounded px-2 py-1 text-xs"
-			class:bg-secondary={filter === status}
-			class:text-muted-foreground={filter !== status}
-			onclick={() => (filter = status)}>{STATUS_LABELS[status]}</button
-		>
-	{/each}
-</div>
+<div class="flex flex-col gap-3">
+	<ToggleGroup.Root type="single" variant="outline" size="sm" bind:value={filter}>
+		<ToggleGroup.Item value="all">All</ToggleGroup.Item>
+		{#each CLIENT_STATUSES as status (status)}
+			<ToggleGroup.Item value={status}>{STATUS_LABELS[status]}</ToggleGroup.Item>
+		{/each}
+	</ToggleGroup.Root>
 
-<div class="border-border overflow-hidden rounded-lg border">
-	<table class="w-full text-sm">
-		<thead class="text-muted-foreground border-border border-b text-left text-xs">
-			<tr>
-				<th class="px-3 py-2 font-medium">Client</th>
-				<th class="px-3 py-2 font-medium">Status</th>
-				<th class="px-3 py-2 font-medium">Service</th>
-				<th class="px-3 py-2 font-medium">Value</th>
-				<th class="px-3 py-2 font-medium">Country</th>
-				<th class="px-3 py-2 font-medium">Next follow-up</th>
-			</tr>
-		</thead>
-		<tbody>
-			{#each filtered as client (client.path)}
-				<tr
-					class="border-border hover:bg-accent cursor-pointer border-b last:border-0"
-					onclick={() => go({ name: 'client', path: client.path })}
-				>
-					<td class="text-foreground px-3 py-2 font-medium">{client.name}</td>
-					<td class="px-3 py-2"><StatusPill status={client.status} /></td>
-					<td class="text-muted-foreground px-3 py-2">{client.service || '—'}</td>
-					<td class="text-foreground px-3 py-2">{money(client)}</td>
-					<td class="text-muted-foreground px-3 py-2">{client.country || '—'}</td>
-					<td class="text-muted-foreground px-3 py-2">{client.nextFollowUp || '—'}</td>
-				</tr>
-			{:else}
-				<tr><td class="text-muted-foreground px-3 py-6 text-center" colspan="6">No clients yet.</td></tr>
-			{/each}
-		</tbody>
-	</table>
+	<div class="border-border overflow-hidden rounded-lg border">
+		<Table.Root>
+			<Table.Header>
+				<Table.Row>
+					<Table.Head>Client</Table.Head>
+					<Table.Head>Status</Table.Head>
+					<Table.Head>Service</Table.Head>
+					<Table.Head>Value</Table.Head>
+					<Table.Head>Country</Table.Head>
+					<Table.Head>Next follow-up</Table.Head>
+				</Table.Row>
+			</Table.Header>
+			<Table.Body>
+				{#each filtered as client (client.path)}
+					<Table.Row class="hover:bg-accent cursor-pointer" onclick={() => go({ name: 'client', path: client.path })}>
+						<Table.Cell class="text-foreground font-medium">{client.name}</Table.Cell>
+						<Table.Cell><StatusBadge status={client.status} /></Table.Cell>
+						<Table.Cell class="text-muted-foreground">{client.service || '—'}</Table.Cell>
+						<Table.Cell class="text-foreground">{money(client)}</Table.Cell>
+						<Table.Cell class="text-muted-foreground">{client.country || '—'}</Table.Cell>
+						<Table.Cell class="text-muted-foreground">{client.nextFollowUp || '—'}</Table.Cell>
+					</Table.Row>
+				{:else}
+					<Table.Row>
+						<Table.Cell colspan={6} class="text-muted-foreground py-6 text-center">No clients yet.</Table.Cell>
+					</Table.Row>
+				{/each}
+			</Table.Body>
+		</Table.Root>
+	</div>
 </div>

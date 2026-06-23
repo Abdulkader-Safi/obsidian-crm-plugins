@@ -8,14 +8,19 @@
 		"noImplicitReturns": true,
 		"noFallthroughCasesInSwitch": true,
 		"noUncheckedIndexedAccess": true,
-		"moduleResolution": "node",
+		"moduleResolution": "bundler",
 		"isolatedModules": true,
 		"verbatimModuleSyntax": true,
 		"skipLibCheck": true,
 		"forceConsistentCasingInFileNames": true,
 		"allowSyntheticDefaultImports": true,
-		"lib": ["ES2021", "DOM"]
+		"lib": ["ES2021", "DOM"],
+		"baseUrl": ".",
+		"paths": {
+			"$lib": ["./src/ui/lib"],
+			"$lib/*": ["./src/ui/lib/*"]
+		}
 	},
-	"include": ["src/**/*.ts"],
+	"include": ["src/**/*.ts", "src/**/*.svelte"],
 	"exclude": ["src/**/*.test.ts"]
 }

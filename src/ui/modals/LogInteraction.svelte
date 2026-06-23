@@ -1,11 +1,11 @@
 <script lang="ts">
 	import type { CrmStore } from '../../crm/store';
 	import { INTERACTION_TYPES, INTERACTION_LABELS, type InteractionType } from '../../crm/types';
-	import Field from '../components/Field.svelte';
-	import TextField from '../components/TextField.svelte';
-	import SelectField from '../components/SelectField.svelte';
-	import Segmented from '../components/Segmented.svelte';
-	import { Button } from '../lib/components/ui/button';
+	import * as Field from '$lib/components/ui/field';
+	import * as Select from '$lib/components/ui/select';
+	import * as ToggleGroup from '$lib/components/ui/toggle-group';
+	import { Input } from '$lib/components/ui/input';
+	import { Button } from '$lib/components/ui/button';
 
 	let {
 		store,
@@ -34,6 +34,9 @@
 		})),
 	]);
 	const typeOptions = INTERACTION_TYPES.map((t) => ({ value: t, label: INTERACTION_LABELS[t] }));
+	const projectLabel = $derived(
+		projectOptions.find((o) => o.value === project)?.label ?? 'None',
+	);
 
 	async function save() {
 		if (!client || !title.trim() || saving) return;
@@ -65,23 +68,69 @@
 	}
 </script>
 
-<div class="flex flex-col gap-4">
-	<h2 class="text-foreground text-base font-semibold">Log interaction</h2>
-	<div class="grid grid-cols-2 gap-3">
-		<Field label="Client"><SelectField bind:value={client} options={clientOptions} /></Field>
-		<Field label="Project"><SelectField bind:value={project} options={projectOptions} /></Field>
+<h2 class="text-foreground mb-4 text-base font-semibold">Log interaction</h2>
+
+<Field.FieldGroup>
+	<div class="grid grid-cols-2 gap-4">
+		<Field.Field>
+			<Field.FieldLabel>Client</Field.FieldLabel>
+			<Select.Root type="single" bind:value={client}>
+				<Select.Trigger class="w-full">{client || 'Select client'}</Select.Trigger>
+				<Select.Content>
+					{#each clientOptions as o (o.value)}
+						<Select.Item value={o.value} label={o.label} />
+					{/each}
+				</Select.Content>
+			</Select.Root>
+		</Field.Field>
+		<Field.Field>
+			<Field.FieldLabel>Project</Field.FieldLabel>
+			<Select.Root type="single" bind:value={project}>
+				<Select.Trigger class="w-full">{projectLabel}</Select.Trigger>
+				<Select.Content>
+					{#each projectOptions as o (o.value)}
+						<Select.Item value={o.value} label={o.label} />
+					{/each}
+				</Select.Content>
+			</Select.Root>
+		</Field.Field>
 	</div>
-	<Field label="Title"><TextField bind:value={title} placeholder="e.g. Follow-up call" /></Field>
-	<Field label="Type"><Segmented bind:value={type} options={typeOptions} /></Field>
-	<div class="grid grid-cols-3 gap-3">
-		<Field label="Medium"><TextField bind:value={medium} /></Field>
-		<Field label="Date"><TextField bind:value={date} type="date" /></Field>
-		<Field label="Duration (min)"><TextField bind:value={duration} type="number" /></Field>
+	<Field.Field>
+		<Field.FieldLabel for="li-title">Title</Field.FieldLabel>
+		<Input id="li-title" bind:value={title} placeholder="e.g. Follow-up call" />
+	</Field.Field>
+	<Field.Field>
+		<Field.FieldLabel>Type</Field.FieldLabel>
+		<ToggleGroup.Root type="single" variant="outline" bind:value={type}>
+			{#each typeOptions as o (o.value)}
+				<ToggleGroup.Item value={o.value}>{o.label}</ToggleGroup.Item>
+			{/each}
+		</ToggleGroup.Root>
+	</Field.Field>
+	<div class="grid grid-cols-3 gap-4">
+		<Field.Field>
+			<Field.FieldLabel for="li-medium">Medium</Field.FieldLabel>
+			<Input id="li-medium" bind:value={medium} />
+		</Field.Field>
+		<Field.Field>
+			<Field.FieldLabel for="li-date">Date</Field.FieldLabel>
+			<Input id="li-date" type="date" bind:value={date} />
+		</Field.Field>
+		<Field.Field>
+			<Field.FieldLabel for="li-duration">Duration (min)</Field.FieldLabel>
+			<Input id="li-duration" type="number" bind:value={duration} />
+		</Field.Field>
 	</div>
-	<Field label="Summary"><TextField bind:value={summary} placeholder="What was discussed?" /></Field>
-	<Field label="Next action"><TextField bind:value={nextAction} placeholder="What happens next?" /></Field>
-	<div class="flex justify-end gap-2">
+	<Field.Field>
+		<Field.FieldLabel for="li-summary">Summary</Field.FieldLabel>
+		<Input id="li-summary" bind:value={summary} placeholder="What was discussed?" />
+	</Field.Field>
+	<Field.Field>
+		<Field.FieldLabel for="li-next">Next action</Field.FieldLabel>
+		<Input id="li-next" bind:value={nextAction} placeholder="What happens next?" />
+	</Field.Field>
+	<Field.Field orientation="horizontal" class="justify-end">
 		<Button variant="outline" size="sm" onclick={close}>Cancel</Button>
 		<Button size="sm" disabled={!client || !title.trim() || saving} onclick={save}>Log interaction</Button>
-	</div>
-</div>
+	</Field.Field>
+</Field.FieldGroup>

@@ -1,5 +1,5 @@
 import { App, Modal } from 'obsidian';
-import { mount, unmount } from 'svelte';
+import { mount, unmount, type Component } from 'svelte';
 import type CrmPlugin from '../../main';
 import NewClient from './NewClient.svelte';
 import LogInteraction from './LogInteraction.svelte';
@@ -24,7 +24,7 @@ export function openCrmModal(
 	let component: ReturnType<typeof mount> | undefined;
 
 	modal.onOpen = () => {
-		const Wrapper = COMPONENTS[key];
+		const Wrapper = COMPONENTS[key] as unknown as Component<Record<string, unknown>>;
 		component = mount(Wrapper, {
 			target: modal.contentEl,
 			props: { ...props, store: plugin.store, close: () => modal.close() },

@@ -1,4 +1,6 @@
 <script lang="ts" module>
+	// Domain status colors (lead → lost, plus project statuses). Data-driven hues,
+	// rendered as a tinted Badge so they read on both light and dark surfaces.
 	const HUES: Record<string, string> = {
 		lead: '#8A8475',
 		proposal: '#A9791F',
@@ -28,15 +30,14 @@
 </script>
 
 <script lang="ts">
+	import { Badge } from '$lib/components/ui/badge';
+
 	let { status, label }: { status: string; label?: string } = $props();
 	const hue = $derived(HUES[status] ?? '#8A8475');
 	const text = $derived(label ?? LABELS[status] ?? status);
 </script>
 
-<span
-	class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
-	style="background-color: {hue}22; color: {hue};"
->
+<Badge variant="outline" class="border-transparent" style="background-color: {hue}22; color: {hue};">
 	<span class="size-1.5 rounded-full" style="background-color: {hue};"></span>
 	{text}
-</span>
+</Badge>

@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { getCrm } from './context';
 	import type { Route } from './router';
-	import { Button } from './lib/components/ui/button';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
 	import Clients from './routes/Clients.svelte';
 	import Dashboard from './routes/Dashboard.svelte';
 	import ClientDetail from './routes/ClientDetail.svelte';
@@ -25,9 +26,11 @@
 		{ name: 'clients', label: 'Clients' },
 	];
 
-	const activeClient = $derived(
-		route.name === 'client' ? model.clients.find((c) => c.path === route.path) : undefined,
-	);
+	const activeClient = $derived.by(() => {
+		if (route.name !== 'client') return undefined;
+		const path = route.path;
+		return model.clients.find((c) => c.path === path);
+	});
 </script>
 
 <div class="app-root bg-background text-foreground flex h-full flex-col overflow-hidden">
@@ -35,23 +38,17 @@
 		<span class="text-foreground font-semibold">CRM</span>
 		<nav class="flex items-center gap-1">
 			{#each tabs as tab (tab.name)}
-				<button
-					class="rounded px-3 py-1 text-sm transition-colors"
-					class:bg-secondary={route.name === tab.name}
-					class:text-foreground={route.name === tab.name}
-					class:text-muted-foreground={route.name !== tab.name}
+				<Button
+					variant={route.name === tab.name ? 'secondary' : 'ghost'}
+					size="sm"
 					onclick={() => go({ name: tab.name })}
 				>
 					{tab.label}
-				</button>
+				</Button>
 			{/each}
 		</nav>
 		<div class="ml-auto flex items-center gap-2">
-			<input
-				bind:value={search}
-				placeholder="Search clients"
-				class="border-input bg-background h-8 rounded-md border px-3 text-sm outline-none"
-			/>
+			<Input bind:value={search} placeholder="Search clients" class="h-8 w-48" />
 			<Button size="sm" onclick={() => crm.openModal('new-client', {})}>New client</Button>
 		</div>
 	</header>

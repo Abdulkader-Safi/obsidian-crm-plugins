@@ -8,6 +8,7 @@ export default tseslint.config(
 		'node_modules',
 		'dist',
 		'esbuild.config.mjs',
+		'svelte.config.js',
 		'version-bump.mjs',
 		'versions.json',
 		'main.js',

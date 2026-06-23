@@ -1,5 +1,6 @@
 import esbuild from 'esbuild';
 import process from 'process';
+import path from 'node:path';
 import { builtinModules } from 'node:module';
 import esbuildSvelte from 'esbuild-svelte';
 import { sveltePreprocess } from 'svelte-preprocess';
@@ -26,6 +27,9 @@ const context = await esbuild.context({
 	],
 	mainFields: ['svelte', 'browser', 'module', 'main'],
 	conditions: ['svelte', 'browser'],
+	alias: {
+		$lib: path.resolve('src/ui/lib'),
+	},
 	external: [
 		'obsidian',
 		'electron',
