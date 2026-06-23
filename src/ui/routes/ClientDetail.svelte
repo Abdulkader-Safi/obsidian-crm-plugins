@@ -28,14 +28,6 @@
 		await crm.store.updateClient(client.path, { tags: client.tags.filter((t) => t !== tag) });
 	}
 
-	function initials(name: string): string {
-		return name
-			.split(/\s+/)
-			.slice(0, 2)
-			.map((w) => w[0]?.toUpperCase() ?? '')
-			.join('');
-	}
-
 	const REL_HUE: Record<string, string> = { active: '#2E7D52', prospect: '#8A8475', past: '#5E6E7A' };
 	const REL_LABEL: Record<string, string> = { active: 'Active', prospect: 'Prospect', past: 'Past' };
 	const relHue = $derived(REL_HUE[client.relationship] ?? '#8A8475');
@@ -67,12 +59,6 @@
 		</Button>
 		<div class="flex items-start justify-between gap-4">
 			<div class="flex items-center gap-3">
-				<span
-					class="flex size-11 shrink-0 items-center justify-center rounded-xl text-sm font-semibold"
-					style="background-color: {relHue}22; color: {relHue};"
-				>
-					{initials(client.name)}
-				</span>
 				<div class="flex flex-col gap-1">
 					<div class="flex items-center gap-2">
 						<h1 class="text-foreground text-xl font-semibold">{client.name}</h1>
@@ -145,11 +131,8 @@
 					{#if client.deals.length}
 						<div class="flex flex-col gap-1">
 							{#each client.deals as d (d.path)}
-								<button
-									class="hover:bg-accent -mx-2 flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 text-left"
-									onclick={() => crm.openModal('deal-detail', { path: d.path })}
-								>
-									<span class="flex min-w-0 items-center gap-2">
+								<button class="crm-rowbtn -mx-2" onclick={() => crm.openModal('deal-detail', { path: d.path })}>
+									<span class="flex min-w-0 flex-1 items-center gap-2">
 										<span class="text-foreground truncate text-sm font-medium">{d.service || d.name}</span>
 										<StatusBadge status={d.stage} />
 									</span>
@@ -170,12 +153,9 @@
 						<div class="flex flex-col gap-3">
 							{#each client.interactions as it (it.path)}
 								<div class="border-border border-b pb-2 last:border-0">
-									<button
-										class="hover:bg-accent -mx-2 flex w-full items-center justify-between rounded px-2 py-1 text-left"
-										onclick={() => crm.openModal('interaction-detail', { path: it.path })}
-									>
-										<span class="text-foreground text-sm font-medium">{it.title}</span>
-										<span class="text-muted-foreground font-mono text-xs">{it.date}</span>
+									<button class="crm-rowbtn -mx-2" onclick={() => crm.openModal('interaction-detail', { path: it.path })}>
+										<span class="text-foreground flex-1 text-sm font-medium">{it.title}</span>
+										<span class="text-muted-foreground shrink-0 font-mono text-xs">{it.date}</span>
 									</button>
 									{#if it.summary}<p class="text-muted-foreground mt-1 text-sm">{it.summary}</p>{/if}
 								</div>

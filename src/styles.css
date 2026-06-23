@@ -64,6 +64,31 @@
  * utilities like `bg-primary` compile to `background-color: var(--primary)`
  * directly, so the scoped Obsidian-mapped values are read at use site.
  */
+/*
+ * Clickable list rows rendered as <button>. Defined unlayered so Obsidian's
+ * default button styling (centered text, background, border) can't override the
+ * left-aligned, full-width row layout. Colors come from theme variables.
+ */
+.app-root button.crm-rowbtn {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 8px;
+	text-align: left;
+	background: transparent;
+	border: none;
+	box-shadow: none;
+	cursor: pointer;
+	padding: 6px 8px;
+	border-radius: 8px;
+	color: inherit;
+	font: inherit;
+}
+.app-root button.crm-rowbtn:hover {
+	background: var(--background-modifier-hover);
+}
+
 @theme inline {
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);

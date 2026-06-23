@@ -24,14 +24,6 @@
 		})),
 	);
 
-	function initials(name: string): string {
-		return name
-			.split(/\s+/)
-			.slice(0, 2)
-			.map((w) => w[0]?.toUpperCase() ?? '')
-			.join('');
-	}
-
 	function onDrop(stage: DealStage) {
 		const path = dragPath;
 		overStage = null;
@@ -106,13 +98,7 @@
 						class="border-border bg-card flex cursor-grab flex-col gap-2 rounded-lg border p-2.5 active:cursor-grabbing"
 						class:opacity-50={dragPath === deal.path}
 					>
-						<button class="flex items-center gap-2 text-left" onclick={() => crm.openModal('deal-detail', { path: deal.path })}>
-							<span
-								class="flex size-6 shrink-0 items-center justify-center rounded-md text-[10px] font-semibold"
-								style="background-color: {statusHue(col.stage)}22; color: {statusHue(col.stage)};"
-							>
-								{initials(deal.client ?? deal.service)}
-							</span>
+						<button class="crm-rowbtn !px-0 !py-0 hover:!bg-transparent" onclick={() => crm.openModal('deal-detail', { path: deal.path })}>
 							<span class="text-foreground truncate text-[12.5px] font-semibold">{deal.client ?? deal.service}</span>
 						</button>
 						{#if deal.service}
