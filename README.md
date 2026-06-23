@@ -6,10 +6,20 @@ By [Abdulkader Safi](https://abdulkadersafi.com).
 
 ## What it does
 
-- A dashboard with a pipeline funnel, follow-ups due this week, a revenue snapshot, recent activity, and an active projects table.
-- A clients list with status filtering and search, and a client detail screen with the deal, contacts, interaction history, action items, and linked projects.
-- Modals to add a client, log an interaction, and delete a client with a cascade warning.
+- A dashboard with a deal pipeline funnel, follow-ups due this week, a revenue snapshot, recent activity, and an active projects table.
+- A pipeline board (kanban) of deals you can drag between stages, a clients list, and a projects list.
+- Detail screens for clients (deals, contacts, interactions, tasks, projects), projects (milestones, tasks, scope), and deals.
+- Modals to add clients, deals, projects, log interactions, plus bulk actions and tags.
 - Everything is stored as markdown, so your data stays yours: it works with Obsidian links, search, and the graph, and outlives the plugin.
+
+## How it is modelled
+
+The CRM separates the account, the sale, and the delivery, the way CRMs normally do:
+
+- **Client (account)** — the company. Persistent; never "in the pipeline". Its relationship (prospect / active / past) is derived from its deals and projects.
+- **Deal (opportunity)** — a potential sale with a stage (`lead → proposal → negotiating → won / lost`), value, and follow-up. A client can have many deals over time, so repeat business is just another deal. The pipeline board is deals.
+- **Project** — delivery work, created from a won deal. Has its own status, budget, milestones, and tasks.
+- **Interaction** and **Task** — logged activity and to-dos, linked to a client and optionally a deal or project.
 
 ## How data is stored
 
@@ -18,28 +28,32 @@ You pick one CRM folder in the settings (default `CRM`). The plugin reads and wr
 ```
 CRM/
   Clients/        CoolPeak AC.md
+  Deals/          CoolPeak AC - Website redesign.md
   Projects/       Horizon Events Website.md
   Interactions/   2026-06-21 CoolPeak AC - Follow-up call.md
   Tasks/          Send proposal.md
 ```
 
-Each note carries a `crm` field in its frontmatter (`client`, `project`, `interaction`, or `task`) and links to its parents with wikilinks. Structured fields live in frontmatter; the note body stays free for your own notes.
+Each note carries a `crm` field in its frontmatter (`client`, `deal`, `project`, `interaction`, or `task`) and links to its parents with wikilinks. Structured fields live in frontmatter; the note body stays free for your own notes.
 
 ```yaml
 ---
-crm: client
-status: lead # lead | proposal | negotiating | active | onhold | completed | lost
-company: CoolPeak AC
+crm: deal
+client: "[[CoolPeak AC]]"
+stage: proposal # lead | proposal | negotiating | won | lost
 service: Website redesign
 value: 1500
 currency: KWD
-email: name@company.com
 nextFollowUp: 2026-07-02
 ---
-Free notes about the client.
+Notes about this opportunity.
 ```
 
 The dashboard rebuilds its view whenever a note in the folder changes, so editing a note by hand updates the CRM, and using the CRM updates the notes.
+
+### Migrating from an earlier version
+
+If you used an earlier build where the client note itself held the sales stage and value, open the plugin settings and use **Migrate clients to deals**. Preview first; it creates a deal per client from the old fields and never deletes data.
 
 ## Use it
 
