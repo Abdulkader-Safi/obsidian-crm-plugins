@@ -19,8 +19,13 @@
  * Obsidian's body-level variables are inherited and resolve at the point of use.
  * Because they resolve at runtime, switching the theme or light/dark mode
  * recolors every component automatically, with no rebuild.
+ *
+ * bits-ui renders overlay content (Select, Popover, Dropdown, etc.) in a portal
+ * attached to <body>, outside .app-root. The floating wrapper is included here so
+ * those popovers inherit the same tokens and don't fall back to a transparent fill.
  */
-.app-root {
+.app-root,
+[data-bits-floating-content-wrapper] {
 	--background: var(--background-primary);
 	--foreground: var(--text-normal);
 	--card: var(--background-primary);
@@ -47,7 +52,10 @@
 
 .app-root *,
 .app-root *::before,
-.app-root *::after {
+.app-root *::after,
+[data-bits-floating-content-wrapper] *,
+[data-bits-floating-content-wrapper] *::before,
+[data-bits-floating-content-wrapper] *::after {
 	box-sizing: border-box;
 }
 
