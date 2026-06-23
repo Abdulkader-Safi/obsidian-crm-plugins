@@ -5,6 +5,9 @@ import {
 	projectFrontmatter,
 	taskFrontmatter,
 	dealFrontmatter,
+	noteBasename,
+	asString,
+	asNumber,
 	type ClientInput,
 	type InteractionInput,
 	type ProjectInput,
@@ -12,6 +15,30 @@ import {
 	type DealInput,
 } from './frontmatter';
 import type { Client, CrmModel, ClientStatus, Project, Deal, DealStage } from './types';
+
+const LEGACY_SALES_KEYS = ['status', 'value', 'service', 'leadSource', 'nextFollowUp', 'followUpNote'];
+
+function legacyStatusToStage(status: string): DealStage {
+	switch (status) {
+		case 'proposal':
+			return 'proposal';
+		case 'negotiating':
+		case 'onhold':
+			return 'negotiating';
+		case 'active':
+		case 'completed':
+			return 'won';
+		case 'lost':
+			return 'lost';
+		default:
+			return 'lead';
+	}
+}
+
+export interface MigrationSummary {
+	created: string[];
+	skipped: string[];
+}
 
 export interface VaultAdapter {
 	listNotes(): NoteRecord[];
@@ -22,6 +49,7 @@ export interface VaultAdapter {
 		body: string,
 	): Promise<string>;
 	updateFrontmatter(path: string, patch: Record<string, unknown>): Promise<void>;
+	removeFrontmatterKeys(path: string, keys: string[]): Promise<void>;
 	deleteNote(path: string): Promise<void>;
 	openNote(path: string): Promise<void>;
 }
@@ -200,5 +228,59 @@ export class CrmStore {
 
 	async openNote(path: string): Promise<void> {
 		await this.adapter.openNote(path);
+	}
+
+	/**
+	 * One-time migration: turn legacy client sales fields (status/value/service/…)
+	 * into Deal notes, then strip those fields from the client. Idempotent: a client
+	 * that already has a deal is skipped. Pass { dryRun: true } to preview counts.
+	 */
+	async migrateClientsToDeals(opts: { dryRun?: boolean } = {}): Promise<MigrationSummary> {
+		const notes = this.adapter.listNotes();
+		const legacyClients = notes.filter(
+			(n) => asString(n.frontmatter.crm) === 'client' && 'status' in n.frontmatter,
+		);
+		const clientsWithDeals = new Set(
+			notes
+				.filter((n) => asString(n.frontmatter.crm) === 'deal')
+				.map((n) => {
+					const c = n.frontmatter.client;
+					return typeof c === 'string' ? c.replace(/^\[\[|\]\]$/g, '').split('|')[0] : '';
+				}),
+		);
+
+		const created: string[] = [];
+		const skipped: string[] = [];
+		for (const note of legacyClients) {
+			const name = noteBasename(note.path);
+			if (clientsWithDeals.has(name)) {
+				skipped.push(name);
+				continue;
+			}
+			if (!opts.dryRun) {
+				const fm = note.frontmatter;
+				const service = asString(fm.service);
+				await this.adapter.createNote(
+					this.folder('Deals'),
+					sanitizeFileName(`${name} - ${service || 'Deal'}`),
+					dealFrontmatter({
+						name,
+						clientName: name,
+						stage: legacyStatusToStage(asString(fm.status)),
+						value: asNumber(fm.value),
+						currency: asString(fm.currency) || 'USD',
+						service,
+						source: asString(fm.leadSource),
+						nextFollowUp: asString(fm.nextFollowUp),
+						followUpNote: asString(fm.followUpNote),
+					}),
+					'',
+				);
+				await this.adapter.removeFrontmatterKeys(note.path, LEGACY_SALES_KEYS);
+			}
+			created.push(name);
+		}
+		if (!opts.dryRun) this.reindex();
+		return { created, skipped };
 	}
 }

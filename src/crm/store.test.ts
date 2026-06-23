@@ -23,6 +23,10 @@ class FakeAdapter implements VaultAdapter {
 		const note = this.notes.find((n) => n.path === path);
 		if (note) Object.assign(note.frontmatter, patch);
 	}
+	async removeFrontmatterKeys(path: string, keys: string[]): Promise<void> {
+		const note = this.notes.find((n) => n.path === path);
+		if (note) for (const key of keys) delete note.frontmatter[key];
+	}
 	async deleteNote(path: string): Promise<void> {
 		this.deleted.push(path);
 		this.notes = this.notes.filter((n) => n.path !== path);
@@ -177,6 +181,38 @@ describe('convertDealToProject', () => {
 		expect(created.frontmatter.deal).toBe('[[CoolPeak Website]]');
 		expect(created.frontmatter.client).toBe('[[CoolPeak AC]]');
 		expect(adapter.patched.find((p) => p.path === 'CRM/Deals/CoolPeak Website.md')?.patch).toEqual({ stage: 'won' });
+	});
+});
+
+describe('migrateClientsToDeals', () => {
+	test('creates deals from legacy client fields and strips them, idempotently', async () => {
+		const { adapter, store } = makeStore();
+		adapter.notes = [
+			{ path: 'CRM/Clients/CoolPeak AC.md', frontmatter: { crm: 'client', status: 'proposal', value: 1500, currency: 'KWD', service: 'Website', leadSource: 'Web' }, body: '' },
+			{ path: 'CRM/Clients/Done Co.md', frontmatter: { crm: 'client', status: 'completed', value: 800, currency: 'KWD' }, body: '' },
+		];
+		store.reindex();
+
+		const preview = await store.migrateClientsToDeals({ dryRun: true });
+		expect(preview.created.sort()).toEqual(['CoolPeak AC', 'Done Co']);
+		expect(adapter.created).toHaveLength(0);
+
+		const result = await store.migrateClientsToDeals();
+		expect(result.created.sort()).toEqual(['CoolPeak AC', 'Done Co']);
+		const deal = adapter.created.find((c) => c.frontmatter.client === '[[CoolPeak AC]]')!;
+		expect(deal.folder).toBe('CRM/Deals');
+		expect(deal.frontmatter.stage).toBe('proposal');
+		expect(deal.frontmatter.value).toBe(1500);
+		// completed maps to won
+		expect(adapter.created.find((c) => c.frontmatter.client === '[[Done Co]]')!.frontmatter.stage).toBe('won');
+		// legacy keys stripped
+		const client = adapter.notes.find((n) => n.path === 'CRM/Clients/CoolPeak AC.md')!;
+		expect('status' in client.frontmatter).toBe(false);
+		expect('value' in client.frontmatter).toBe(false);
+
+		// second run is a no-op (clients already have deals)
+		const again = await store.migrateClientsToDeals();
+		expect(again.created).toHaveLength(0);
 	});
 });
 

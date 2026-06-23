@@ -81,6 +81,14 @@ export class ObsidianVaultAdapter implements VaultAdapter {
 		});
 	}
 
+	async removeFrontmatterKeys(path: string, keys: string[]): Promise<void> {
+		const file = this.app.vault.getAbstractFileByPath(normalizePath(path));
+		if (!(file instanceof TFile)) return;
+		await this.app.fileManager.processFrontMatter(file, (fm: Record<string, unknown>) => {
+			for (const key of keys) delete fm[key];
+		});
+	}
+
 	async deleteNote(path: string): Promise<void> {
 		const file = this.app.vault.getAbstractFileByPath(normalizePath(path));
 		if (file instanceof TFile) await this.app.fileManager.trashFile(file);
