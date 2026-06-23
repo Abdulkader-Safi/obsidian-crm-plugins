@@ -64,6 +64,54 @@
  * utilities like `bg-primary` compile to `background-color: var(--primary)`
  * directly, so the scoped Obsidian-mapped values are read at use site.
  */
+/*
+ * Top navigation tab group. Defined as plain (unlayered) rules so Obsidian's
+ * default <button> chrome (border, box-shadow, background) can't override them.
+ * Colors resolve from Obsidian theme variables, so the tabs follow the theme.
+ */
+.app-root .crm-tabs {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	padding: 4px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 12px;
+	background: var(--background-secondary);
+}
+.app-root .crm-tab {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 12px;
+	border: none;
+	border-radius: 8px;
+	background: transparent;
+	box-shadow: none;
+	cursor: pointer;
+	font-size: 13px;
+	font-weight: 500;
+	line-height: 1.2;
+	color: var(--text-muted);
+	transition:
+		background-color 0.12s ease,
+		color 0.12s ease;
+}
+.app-root .crm-tab:hover {
+	color: var(--text-normal);
+}
+.app-root .crm-tab[data-active='true'] {
+	background: var(--background-primary);
+	color: var(--text-normal);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+.app-root .crm-tab svg {
+	width: 16px;
+	height: 16px;
+}
+.app-root .crm-tab[data-active='true'] svg {
+	color: var(--interactive-accent);
+}
+
 @theme inline {
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);

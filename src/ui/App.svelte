@@ -46,32 +46,30 @@
 </script>
 
 <div class="app-root bg-background text-foreground flex h-full flex-col overflow-hidden">
-	<header class="border-border bg-card flex items-center gap-6 border-b px-7 py-3">
-		<div class="flex flex-col">
+	<header class="border-border bg-card flex items-center gap-4 border-b px-7 py-3">
+		<div class="flex flex-1 flex-col">
 			<span class="text-foreground text-lg font-bold leading-tight">CRM</span>
 			<span class="text-muted-foreground text-xs">
 				{model.clients.length} clients · {activeProjects} active projects
 			</span>
 		</div>
 
-		<nav class="border-border bg-secondary/40 flex items-center gap-1 rounded-xl border p-1">
+		<nav class="crm-tabs shrink-0">
 			{#each tabs as tab (tab.name)}
 				{@const Icon = tab.icon}
 				<button
-					class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors"
-					class:bg-card={route.name === tab.name}
-					class:text-foreground={route.name === tab.name}
-					class:shadow-sm={route.name === tab.name}
-					class:text-muted-foreground={route.name !== tab.name}
+					type="button"
+					class="crm-tab"
+					data-active={route.name === tab.name}
 					onclick={() => go({ name: tab.name })}
 				>
-					<Icon class="size-4 {route.name === tab.name ? 'text-primary' : ''}" />
+					<Icon />
 					{tab.label}
 				</button>
 			{/each}
 		</nav>
 
-		<div class="ml-auto flex items-center gap-2.5">
+		<div class="flex flex-1 items-center justify-end gap-2.5">
 			<div class="relative">
 				<Search class="text-muted-foreground pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2" />
 				<Input bind:value={search} placeholder="Search clients" class="h-9 w-52 pl-8" />
