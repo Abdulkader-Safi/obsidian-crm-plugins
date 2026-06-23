@@ -39,9 +39,9 @@
 <div class="flex flex-col gap-3">
 	<div class="flex items-center justify-between">
 		<ToggleGroup.Root type="single" variant="outline" size="sm" bind:value={filter}>
-			<ToggleGroup.Item value="all">All</ToggleGroup.Item>
+			<ToggleGroup.Item value="all" class="data-[state=on]:bg-primary! data-[state=on]:text-primary-foreground! data-[state=on]:border-primary!">All</ToggleGroup.Item>
 			{#each PROJECT_STATUSES as status (status)}
-				<ToggleGroup.Item value={status}>{PROJECT_STATUS_LABELS[status]}</ToggleGroup.Item>
+				<ToggleGroup.Item value={status} class="data-[state=on]:bg-primary! data-[state=on]:text-primary-foreground! data-[state=on]:border-primary!">{PROJECT_STATUS_LABELS[status]}</ToggleGroup.Item>
 			{/each}
 		</ToggleGroup.Root>
 		<Button size="sm" onclick={() => crm.openModal('new-project', {})}>

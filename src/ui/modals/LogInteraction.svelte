@@ -107,7 +107,12 @@
 		<Field.FieldLabel>Type</Field.FieldLabel>
 		<ToggleGroup.Root type="single" variant="outline" bind:value={type}>
 			{#each typeOptions as o (o.value)}
-				<ToggleGroup.Item value={o.value}>{o.label}</ToggleGroup.Item>
+				<ToggleGroup.Item
+					value={o.value}
+					class="data-[state=on]:bg-primary! data-[state=on]:text-primary-foreground! data-[state=on]:border-primary!"
+				>
+					{o.label}
+				</ToggleGroup.Item>
 			{/each}
 		</ToggleGroup.Root>
 	</Field.Field>
