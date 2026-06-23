@@ -9,6 +9,7 @@
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
 	import { statusHue } from '$lib/status';
 	import CalendarClock from '@lucide/svelte/icons/calendar-clock';
+	import CalendarX from '@lucide/svelte/icons/calendar-x';
 	import Wallet from '@lucide/svelte/icons/wallet';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import MessageSquarePlus from '@lucide/svelte/icons/message-square-plus';
@@ -29,15 +30,32 @@
 	const totalClients = $derived(model.clients.length);
 	const stageCount = $derived(pipeline.filter((p) => p.count > 0).length);
 
-	function weekAhead(dateStr: string): boolean {
-		if (!dateStr) return false;
-		const date = new Date(dateStr).getTime();
-		if (Number.isNaN(date)) return false;
-		const now = Date.now();
-		return date >= now - 86400000 && date <= now + 7 * 86400000;
+	const DAY = 86400000;
+	function daysUntil(dateStr: string): number | null {
+		if (!dateStr) return null;
+		const date = new Date(dateStr);
+		if (Number.isNaN(date.getTime())) return null;
+		const today = new Date();
+		const a = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+		const b = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+		return Math.round((a - b) / DAY);
+	}
+	function reminder(dateStr: string) {
+		const d = daysUntil(dateStr);
+		if (d === null) return null;
+		if (d < 0) return { kind: 'overdue', label: `${-d} day${d === -1 ? '' : 's'} overdue`, hue: statusHue('lost'), icon: CalendarX };
+		if (d === 0) return { kind: 'today', label: 'Due today', hue: statusHue('negotiating'), icon: CalendarClock };
+		return { kind: 'soon', label: `In ${d} day${d === 1 ? '' : 's'}`, hue: statusHue('lead'), icon: CalendarClock };
 	}
 
-	const followUps = $derived(model.clients.filter((c) => weekAhead(c.nextFollowUp)));
+	const followUps = $derived(
+		model.clients
+			.filter((c) => {
+				const d = daysUntil(c.nextFollowUp);
+				return d !== null && d <= 7;
+			})
+			.sort((a, b) => (a.nextFollowUp < b.nextFollowUp ? -1 : 1)),
+	);
 	const recent = $derived(model.interactions.slice(0, 6));
 	const activeProjects = $derived(
 		model.projects.filter((p) => !['completed', 'cancelled'].includes(p.status)),
@@ -135,7 +153,8 @@
 				</div>
 				{#if followUps.length}
 					{#each followUps as client (client.path)}
-						<div class="border-border flex items-center gap-4 border-b px-5 py-3.5 last:border-0">
+						{@const r = reminder(client.nextFollowUp)}
+							<div class="border-border flex items-center gap-4 border-b px-5 py-3.5 last:border-0">
 							<div class="flex w-10 shrink-0 flex-col items-center">
 								<span class="text-foreground font-mono text-xl font-semibold leading-none">{dayOf(client.nextFollowUp)}</span>
 								<span class="text-muted-foreground mt-0.5 text-[10px] font-semibold tracking-wider">{monthOf(client.nextFollowUp)}</span>
@@ -149,6 +168,9 @@
 										<span class="text-muted-foreground text-xs">{client.website || client.company}</span>
 									{/if}
 									<StatusBadge status={client.status} />
+										{#if r}
+											<span class="rounded-full px-2 py-0.5 text-[11px] font-semibold" style="background-color: {r.hue}22; color: {r.hue};">{r.label}</span>
+										{/if}
 								</div>
 								{#if client.followUpNote}
 									<p class="text-muted-foreground mt-1 text-[13px]">{client.followUpNote}</p>
