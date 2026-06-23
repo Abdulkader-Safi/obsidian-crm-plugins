@@ -55,7 +55,7 @@ describe('buildModel', () => {
 		const m = buildModel(notes);
 		expect(m.clients).toHaveLength(1);
 		expect(m.clients[0]!.name).toBe('CoolPeak AC');
-		expect(m.clients[0]!.value).toBe(1500);
+		expect(m.clients[0]!.currency).toBe('KWD');
 	});
 
 	test('attaches interaction, task, and project to the client', () => {
@@ -75,12 +75,6 @@ describe('buildModel', () => {
 		expect(total).toBe(4);
 	});
 
-	test('defaults unknown client status to lead', () => {
-		const m = buildModel([
-			{ path: 'CRM/Clients/X.md', frontmatter: { crm: 'client' }, body: '' },
-		]);
-		expect(m.clients[0]!.status).toBe('lead');
-	});
 
 	test('reads client tags from an array or a single value', () => {
 		const m = buildModel([

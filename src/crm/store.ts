@@ -14,7 +14,7 @@ import {
 	type TaskInput,
 	type DealInput,
 } from './frontmatter';
-import type { Client, CrmModel, ClientStatus, Project, Deal, DealStage } from './types';
+import type { Client, CrmModel, Project, Deal, DealStage } from './types';
 
 const LEGACY_SALES_KEYS = ['status', 'value', 'service', 'leadSource', 'nextFollowUp', 'followUpNote'];
 
@@ -132,11 +132,6 @@ export class CrmStore {
 
 	async updateClient(path: string, patch: Record<string, unknown>): Promise<void> {
 		await this.adapter.updateFrontmatter(path, patch);
-		this.reindex();
-	}
-
-	async setClientStatus(path: string, status: ClientStatus): Promise<void> {
-		await this.adapter.updateFrontmatter(path, { status });
 		this.reindex();
 	}
 

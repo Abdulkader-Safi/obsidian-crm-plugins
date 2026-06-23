@@ -1,12 +1,3 @@
-export type ClientStatus =
-	| 'lead'
-	| 'proposal'
-	| 'negotiating'
-	| 'active'
-	| 'onhold'
-	| 'completed'
-	| 'lost';
-
 export type ProjectStatus =
 	| 'discovery'
 	| 'development'
@@ -32,16 +23,6 @@ export const DEAL_STAGE_LABELS: Record<DealStage, string> = {
 
 export const OPEN_DEAL_STAGES: DealStage[] = ['lead', 'proposal', 'negotiating'];
 
-export const CLIENT_STATUSES: ClientStatus[] = [
-	'lead',
-	'proposal',
-	'negotiating',
-	'active',
-	'onhold',
-	'completed',
-	'lost',
-];
-
 export const PROJECT_STATUSES: ProjectStatus[] = [
 	'discovery',
 	'development',
@@ -57,16 +38,6 @@ export const INTERACTION_TYPES: InteractionType[] = [
 	'followup',
 	'note',
 ];
-
-export const STATUS_LABELS: Record<ClientStatus, string> = {
-	lead: 'Lead',
-	proposal: 'Proposal',
-	negotiating: 'Negotiating',
-	active: 'Active',
-	onhold: 'On hold',
-	completed: 'Completed',
-	lost: 'Lost',
-};
 
 export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
 	discovery: 'Discovery',
@@ -150,22 +121,16 @@ export interface Project {
 export interface Client {
 	path: string;
 	name: string;
-	status: ClientStatus;
 	company: string;
 	industry: string;
 	country: string;
 	region: string;
-	service: string;
-	value: number;
 	currency: string;
-	leadSource: string;
 	email: string;
 	phone: string;
 	website: string;
 	contact: string;
 	pitchAs: string;
-	nextFollowUp: string;
-	followUpNote: string;
 	tags: string[];
 	relationship: ClientRelationship;
 	interactions: Interaction[];

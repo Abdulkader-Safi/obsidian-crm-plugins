@@ -1,5 +1,4 @@
 import {
-	CLIENT_STATUSES,
 	PROJECT_STATUSES,
 	INTERACTION_TYPES,
 	DEAL_STAGES,
@@ -9,7 +8,6 @@ import {
 	type Interaction,
 	type Task,
 	type Deal,
-	type ClientStatus,
 	type ProjectStatus,
 	type InteractionType,
 	type DealStage,
@@ -26,11 +24,6 @@ export interface NoteRecord {
 
 export function emptyModel(): CrmModel {
 	return { clients: [], projects: [], interactions: [], tasks: [], deals: [] };
-}
-
-function clientStatus(value: unknown): ClientStatus {
-	const v = asString(value) as ClientStatus;
-	return CLIENT_STATUSES.includes(v) ? v : 'lead';
 }
 
 function projectStatus(value: unknown): ProjectStatus {
@@ -53,22 +46,16 @@ function toClient(note: NoteRecord): Client {
 	return {
 		path: note.path,
 		name: noteBasename(note.path),
-		status: clientStatus(fm.status),
 		company: asString(fm.company),
 		industry: asString(fm.industry),
 		country: asString(fm.country),
 		region: asString(fm.region),
-		service: asString(fm.service),
-		value: asNumber(fm.value),
 		currency: asString(fm.currency),
-		leadSource: asString(fm.leadSource),
 		email: asString(fm.email),
 		phone: asString(fm.phone),
 		website: asString(fm.website),
 		contact: asString(fm.contact),
 		pitchAs: asString(fm.pitchAs),
-		nextFollowUp: asString(fm.nextFollowUp),
-		followUpNote: asString(fm.followUpNote),
 		tags: toStringArray(fm.tags),
 		relationship: 'prospect',
 		interactions: [],

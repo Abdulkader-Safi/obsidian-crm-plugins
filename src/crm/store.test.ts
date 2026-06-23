@@ -123,19 +123,6 @@ describe('createProject', () => {
 	});
 });
 
-describe('setClientStatus', () => {
-	test('patches the client status', async () => {
-		const { adapter, store } = makeStore();
-		adapter.notes = [
-			{ path: 'CRM/Clients/A.md', frontmatter: { crm: 'client', status: 'lead' }, body: '' },
-		];
-		store.reindex();
-		await store.setClientStatus('CRM/Clients/A.md', 'active');
-		expect(adapter.patched[0]).toEqual({ path: 'CRM/Clients/A.md', patch: { status: 'active' } });
-		expect(store.getModel().clients[0]!.status).toBe('active');
-	});
-});
-
 describe('createDeal', () => {
 	test('writes a deal note in the Deals folder linked to the client', async () => {
 		const { adapter, store } = makeStore();
