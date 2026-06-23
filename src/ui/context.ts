@@ -16,5 +16,5 @@ export function setCrmContext(value: CrmContext): void {
 }
 
 export function getCrm(): CrmContext {
-	return getContext(KEY) as CrmContext;
+	return getContext<CrmContext>(KEY);
 }

@@ -14,6 +14,7 @@ export default tseslint.config(
 		'package.json',
 		'package-lock.json',
 		'tsconfig.json',
+		'src/**/*.test.ts',
 	]),
 	{
 		languageOptions: {
@@ -30,4 +31,10 @@ export default tseslint.config(
 		},
 	},
 	...obsidianmd.configs.recommended,
+	{
+		rules: {
+			// "CRM" is an acronym; the sentence-case rule misreads it as a casing error.
+			'obsidianmd/ui/sentence-case': 'off',
+		},
+	},
 );

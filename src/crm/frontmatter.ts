@@ -21,7 +21,10 @@ export function noteBasename(path: string): string {
 
 export function asString(value: unknown): string {
 	if (value === undefined || value === null) return '';
-	return String(value);
+	if (typeof value === 'string') return value;
+	if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+	if (typeof value === 'object') return JSON.stringify(value);
+	return '';
 }
 
 export function asNumber(value: unknown): number {

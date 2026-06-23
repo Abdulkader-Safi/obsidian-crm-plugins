@@ -25,7 +25,7 @@ export default class CrmPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'open-crm',
-			name: 'Open CRM',
+			name: 'Open view',
 			callback: () => void this.activateView(),
 		});
 
