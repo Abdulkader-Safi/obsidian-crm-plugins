@@ -1,29 +1,33 @@
 <script lang="ts">
-	import type { CrmModel } from '../../crm/types';
-	import { CLIENT_STATUSES } from '../../crm/types';
+	import type { CrmModel, Interaction } from '../../crm/types';
+	import { CLIENT_STATUSES, STATUS_LABELS } from '../../crm/types';
 	import type { Go } from '../router';
+	import { getCrm } from '../context';
 	import * as Card from '$lib/components/ui/card';
+	import * as Table from '$lib/components/ui/table';
 	import { Button } from '$lib/components/ui/button';
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
+	import { statusHue } from '$lib/status';
+	import CalendarClock from '@lucide/svelte/icons/calendar-clock';
+	import Wallet from '@lucide/svelte/icons/wallet';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import MessageSquarePlus from '@lucide/svelte/icons/message-square-plus';
+	import Mail from '@lucide/svelte/icons/mail';
+	import Phone from '@lucide/svelte/icons/phone';
+	import Users from '@lucide/svelte/icons/users';
+	import StickyNote from '@lucide/svelte/icons/sticky-note';
 
 	let { model, go }: { model: CrmModel; go: Go } = $props();
+	const crm = getCrm();
 
 	const pipeline = $derived(
-		CLIENT_STATUSES.map((status) => {
-			const clients = model.clients.filter((c) => c.status === status);
-			const value = clients.reduce((sum, c) => sum + c.value, 0);
-			return { status, count: clients.length, value };
-		}),
+		CLIENT_STATUSES.map((status) => ({
+			status,
+			count: model.clients.filter((c) => c.status === status).length,
+		})),
 	);
-
-	const wonValue = $derived(
-		model.clients.filter((c) => c.status === 'completed').reduce((s, c) => s + c.value, 0),
-	);
-	const openValue = $derived(
-		model.clients
-			.filter((c) => !['completed', 'lost'].includes(c.status))
-			.reduce((s, c) => s + c.value, 0),
-	);
+	const totalClients = $derived(model.clients.length);
+	const stageCount = $derived(pipeline.filter((p) => p.count > 0).length);
 
 	function weekAhead(dateStr: string): boolean {
 		if (!dateStr) return false;
@@ -34,112 +38,251 @@
 	}
 
 	const followUps = $derived(model.clients.filter((c) => weekAhead(c.nextFollowUp)));
-	const recent = $derived(model.interactions.slice(0, 8));
+	const recent = $derived(model.interactions.slice(0, 6));
 	const activeProjects = $derived(
 		model.projects.filter((p) => !['completed', 'cancelled'].includes(p.status)),
 	);
+
+	const currency = $derived(model.projects[0]?.currency || model.clients[0]?.currency || '');
+	const totalBudget = $derived(model.projects.reduce((s, p) => s + p.budget, 0));
+	const paid = $derived(
+		model.projects.filter((p) => p.status === 'completed').reduce((s, p) => s + p.budget, 0),
+	);
+	const outstanding = $derived(Math.max(0, totalBudget - paid));
+	const paidPct = $derived(totalBudget ? Math.round((paid / totalBudget) * 100) : 0);
+
+	function dayOf(dateStr: string): string {
+		const d = new Date(dateStr);
+		return Number.isNaN(d.getTime()) ? '--' : String(d.getDate());
+	}
+	function monthOf(dateStr: string): string {
+		const d = new Date(dateStr);
+		return Number.isNaN(d.getTime())
+			? ''
+			: d.toLocaleString('en', { month: 'short' }).toUpperCase();
+	}
+	function deadline(dateStr: string): string {
+		const d = new Date(dateStr);
+		return Number.isNaN(d.getTime())
+			? '—'
+			: d.toLocaleString('en', { day: '2-digit', month: 'short' });
+	}
+
+	const ACT_ICON = { email: Mail, call: Phone, meeting: Users, followup: CalendarClock, note: StickyNote };
+	function actIcon(it: Interaction) {
+		return ACT_ICON[it.type] ?? StickyNote;
+	}
 </script>
 
-<div class="flex flex-col gap-4">
-	<Card.Root>
-		<Card.Header>
-			<Card.Title>Pipeline</Card.Title>
-		</Card.Header>
-		<Card.Content>
-			<div class="flex flex-wrap gap-4">
-				{#each pipeline as item (item.status)}
-					<div class="flex flex-col gap-1">
-						<StatusBadge status={item.status} />
-						<span class="text-foreground text-lg font-semibold">{item.count}</span>
-						<span class="text-muted-foreground text-xs">{item.value.toLocaleString()}</span>
-					</div>
-				{/each}
+<div class="flex flex-col gap-6">
+	<!-- Pipeline -->
+	<section class="flex flex-col gap-3.5">
+		<div class="flex items-end justify-between">
+			<div class="flex items-baseline gap-2.5">
+				<h2 class="text-foreground text-base font-semibold">Pipeline</h2>
+				<span class="text-muted-foreground text-[13px]">
+					{totalClients} clients across {stageCount} stage{stageCount === 1 ? '' : 's'}
+				</span>
 			</div>
-		</Card.Content>
-	</Card.Root>
+			<button class="text-primary flex items-center gap-1.5 text-[13px] font-medium hover:underline">
+				Open board <ArrowRight class="size-3.5" />
+			</button>
+		</div>
+		<div class="border-border flex h-11 gap-0.5 overflow-hidden rounded-lg border">
+			{#if totalClients === 0}
+				<div class="bg-muted flex-1"></div>
+			{:else}
+				{#each pipeline.filter((p) => p.count > 0) as seg (seg.status)}
+					<div style="flex: {seg.count}; background-color: {statusHue(seg.status)};"></div>
+				{/each}
+			{/if}
+		</div>
+		<div class="flex flex-wrap gap-2">
+			{#each pipeline as seg (seg.status)}
+				<span
+					class="inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs"
+					style="background-color: {statusHue(seg.status)}1f;"
+				>
+					<span class="size-2 rounded-full" style="background-color: {statusHue(seg.status)};"></span>
+					<span class="font-semibold" style="color: {statusHue(seg.status)};">{STATUS_LABELS[seg.status]}</span>
+					<span class="text-foreground font-mono text-[12px]">{seg.count}</span>
+				</span>
+			{/each}
+		</div>
+	</section>
 
-	<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-		<Card.Root>
-			<Card.Header>
-				<Card.Title>Follow-ups this week</Card.Title>
-			</Card.Header>
-			<Card.Content>
+	<!-- Columns -->
+	<div class="flex flex-col gap-6 lg:flex-row">
+		<!-- Left -->
+		<div class="flex min-w-0 flex-1 flex-col gap-6">
+			<!-- Follow-ups -->
+			<Card.Root class="gap-0 overflow-hidden p-0">
+				<div class="border-border flex items-center justify-between border-b px-5 py-4">
+					<div class="flex items-center gap-2.5">
+						<span class="bg-primary/15 text-primary flex size-7 items-center justify-center rounded-lg">
+							<CalendarClock class="size-4" />
+						</span>
+						<h3 class="text-foreground text-base font-semibold">Follow-ups due this week</h3>
+					</div>
+					{#if followUps.length}
+						<span class="bg-primary text-primary-foreground rounded-full px-2.5 py-0.5 text-xs font-bold">
+							{followUps.length} due
+						</span>
+					{/if}
+				</div>
 				{#if followUps.length}
-					<div class="flex flex-col gap-1">
-						{#each followUps as client (client.path)}
-							<div class="flex items-center justify-between">
-								<Button variant="link" size="sm" class="h-auto p-0" onclick={() => go({ name: 'client', path: client.path })}>
-									{client.name}
-								</Button>
-								<span class="text-muted-foreground text-xs">{client.nextFollowUp}</span>
+					{#each followUps as client (client.path)}
+						<div class="border-border flex items-center gap-4 border-b px-5 py-3.5 last:border-0">
+							<div class="flex w-10 shrink-0 flex-col items-center">
+								<span class="text-foreground font-mono text-xl font-semibold leading-none">{dayOf(client.nextFollowUp)}</span>
+								<span class="text-muted-foreground mt-0.5 text-[10px] font-semibold tracking-wider">{monthOf(client.nextFollowUp)}</span>
 							</div>
-						{/each}
-					</div>
+							<div class="min-w-0 flex-1">
+								<div class="flex flex-wrap items-center gap-2.5">
+									<button class="text-foreground text-sm font-semibold hover:underline" onclick={() => go({ name: 'client', path: client.path })}>
+										{client.name}
+									</button>
+									{#if client.website || client.company}
+										<span class="text-muted-foreground text-xs">{client.website || client.company}</span>
+									{/if}
+									<StatusBadge status={client.status} />
+								</div>
+								{#if client.followUpNote}
+									<p class="text-muted-foreground mt-1 text-[13px]">{client.followUpNote}</p>
+								{/if}
+							</div>
+							<Button variant="outline" size="sm" onclick={() => crm.openModal('log-interaction', { clientName: client.name })}>
+								<MessageSquarePlus data-icon="inline-start" /> Log
+							</Button>
+						</div>
+					{/each}
 				{:else}
-					<p class="text-muted-foreground text-sm">Nothing due this week.</p>
+					<p class="text-muted-foreground px-5 py-6 text-sm">Nothing due this week.</p>
 				{/if}
-			</Card.Content>
-		</Card.Root>
+			</Card.Root>
 
-		<Card.Root>
-			<Card.Header>
-				<Card.Title>Finance</Card.Title>
-			</Card.Header>
-			<Card.Content>
-				<div class="flex gap-6">
-					<div>
-						<p class="text-muted-foreground text-xs">Won</p>
-						<p class="text-foreground text-lg font-semibold">{wonValue.toLocaleString()}</p>
+			<!-- Active projects -->
+			<Card.Root class="gap-0 overflow-hidden p-0">
+				<div class="border-border flex items-center justify-between border-b px-5 py-4">
+					<div class="flex items-baseline gap-2.5">
+						<h3 class="text-foreground text-base font-semibold">Active projects</h3>
+						<span class="text-muted-foreground text-xs">{activeProjects.length} in progress</span>
 					</div>
-					<div>
-						<p class="text-muted-foreground text-xs">Open pipeline</p>
-						<p class="text-foreground text-lg font-semibold">{openValue.toLocaleString()}</p>
+					<button class="text-primary text-xs font-medium hover:underline">View all</button>
+				</div>
+				{#if activeProjects.length}
+					<Table.Root>
+						<Table.Header>
+							<Table.Row class="hover:bg-transparent">
+								<Table.Head>Project</Table.Head>
+								<Table.Head>Client</Table.Head>
+								<Table.Head>Status</Table.Head>
+								<Table.Head>Deadline</Table.Head>
+								<Table.Head class="text-right">Progress</Table.Head>
+								<Table.Head class="text-right">Budget</Table.Head>
+							</Table.Row>
+						</Table.Header>
+						<Table.Body>
+							{#each activeProjects as p (p.path)}
+								<Table.Row>
+									<Table.Cell class="text-foreground font-medium">{p.name}</Table.Cell>
+									<Table.Cell class="text-muted-foreground">{p.client ?? '—'}</Table.Cell>
+									<Table.Cell>
+										<span class="flex items-center gap-1.5">
+											<span class="size-1.5 rounded-full" style="background-color: {statusHue(p.status)};"></span>
+											<span class="text-foreground text-[13px] capitalize">{p.status}</span>
+										</span>
+									</Table.Cell>
+									<Table.Cell class="text-muted-foreground font-mono text-[13px]">{deadline(p.dueDate)}</Table.Cell>
+									<Table.Cell>
+										<div class="flex items-center justify-end gap-2">
+											<div class="bg-muted h-1.5 w-16 overflow-hidden rounded-full">
+												<div class="bg-primary h-full rounded-full" style="width: {Math.max(0, Math.min(100, p.progress))}%;"></div>
+											</div>
+											<span class="text-foreground w-9 text-right font-mono text-xs">{p.progress}%</span>
+										</div>
+									</Table.Cell>
+									<Table.Cell class="text-right">
+										<span class="text-foreground font-mono text-[13px] font-semibold">{p.budget.toLocaleString()}</span>
+										<span class="text-muted-foreground ml-1 text-[10px]">{p.currency}</span>
+									</Table.Cell>
+								</Table.Row>
+							{/each}
+						</Table.Body>
+					</Table.Root>
+				{:else}
+					<p class="text-muted-foreground px-5 py-6 text-sm">No active projects.</p>
+				{/if}
+			</Card.Root>
+		</div>
+
+		<!-- Right -->
+		<div class="flex shrink-0 flex-col gap-6 lg:w-[380px]">
+			<!-- This month -->
+			<Card.Root class="gap-4">
+				<div class="flex items-center justify-between">
+					<div class="flex items-center gap-2.5">
+						<span class="flex size-7 items-center justify-center rounded-lg" style="background-color: {statusHue('active')}22; color: {statusHue('active')};">
+							<Wallet class="size-4" />
+						</span>
+						<h3 class="text-foreground text-[15px] font-semibold">This month</h3>
+					</div>
+					<span class="text-muted-foreground font-mono text-xs">
+						{new Date().toLocaleString('en', { month: 'long', year: 'numeric' })}
+					</span>
+				</div>
+				<div>
+					<div class="flex items-end gap-1.5">
+						<span class="text-foreground font-mono text-4xl font-semibold leading-none">{totalBudget.toLocaleString()}</span>
+						<span class="text-muted-foreground text-sm font-semibold">{currency}</span>
+					</div>
+					<p class="text-muted-foreground mt-1.5 text-xs">Invoiced across {model.projects.length} project{model.projects.length === 1 ? '' : 's'}</p>
+				</div>
+				<div class="h-2 overflow-hidden rounded-full" style="background-color: {statusHue('lost')}33;">
+					<div class="h-full rounded-full" style="width: {paidPct}%; background-color: {statusHue('active')};"></div>
+				</div>
+				<div class="flex justify-between">
+					<div class="flex flex-col gap-1">
+						<span class="text-muted-foreground flex items-center gap-1.5 text-[13px] font-medium">
+							<span class="size-2 rounded-full" style="background-color: {statusHue('active')};"></span> Paid
+						</span>
+						<span><span class="text-foreground font-mono text-lg font-semibold">{paid.toLocaleString()}</span> <span class="text-muted-foreground text-[11px]">{currency}</span></span>
+					</div>
+					<div class="flex flex-col gap-1">
+						<span class="text-muted-foreground flex items-center gap-1.5 text-[13px] font-medium">
+							<span class="size-2 rounded-full" style="background-color: {statusHue('lost')};"></span> Outstanding
+						</span>
+						<span><span class="text-foreground font-mono text-lg font-semibold">{outstanding.toLocaleString()}</span> <span class="text-muted-foreground text-[11px]">{currency}</span></span>
 					</div>
 				</div>
-			</Card.Content>
-		</Card.Root>
-	</div>
+			</Card.Root>
 
-	<Card.Root>
-		<Card.Header>
-			<Card.Title>Recent activity</Card.Title>
-		</Card.Header>
-		<Card.Content>
-			{#if recent.length}
-				<div class="flex flex-col gap-2">
+			<!-- Recent activity -->
+			<Card.Root class="gap-0 overflow-hidden p-0">
+				<div class="border-border flex items-center justify-between border-b px-5 py-4">
+					<h3 class="text-foreground text-[15px] font-semibold">Recent activity</h3>
+					<button class="text-primary text-xs font-medium hover:underline">View log</button>
+				</div>
+				{#if recent.length}
 					{#each recent as it (it.path)}
-						<div class="flex items-center justify-between text-sm">
-							<span class="text-foreground">{it.title}</span>
-							<span class="text-muted-foreground text-xs">{it.client ?? ''} · {it.date}</span>
-						</div>
-					{/each}
-				</div>
-			{:else}
-				<p class="text-muted-foreground text-sm">No interactions logged yet.</p>
-			{/if}
-		</Card.Content>
-	</Card.Root>
-
-	<Card.Root>
-		<Card.Header>
-			<Card.Title>Active projects</Card.Title>
-		</Card.Header>
-		<Card.Content>
-			{#if activeProjects.length}
-				<div class="flex flex-col gap-2">
-					{#each activeProjects as p (p.path)}
-						<div class="flex items-center justify-between text-sm">
-							<span class="text-foreground">{p.name}</span>
-							<span class="text-muted-foreground flex items-center gap-2 text-xs">
-								<StatusBadge status={p.status} />
-								{p.progress}%
+						{@const Icon = actIcon(it)}
+						<div class="border-border flex gap-3 border-b px-5 py-3.5 last:border-0">
+							<span class="flex size-7 shrink-0 items-center justify-center rounded-full" style="background-color: {statusHue('lead')}22; color: {statusHue('lead')};">
+								<Icon class="size-3.5" />
 							</span>
+							<div class="min-w-0 flex-1">
+								<div class="flex items-center justify-between gap-2">
+									<span class="text-foreground truncate text-[13px] font-medium">{it.client ?? it.title}</span>
+									<span class="text-muted-foreground shrink-0 font-mono text-[11px]">{deadline(it.date)}</span>
+								</div>
+								{#if it.summary}<p class="text-muted-foreground mt-0.5 text-[13px]">{it.summary}</p>{/if}
+							</div>
 						</div>
 					{/each}
-				</div>
-			{:else}
-				<p class="text-muted-foreground text-sm">No active projects.</p>
-			{/if}
-		</Card.Content>
-	</Card.Root>
+				{:else}
+					<p class="text-muted-foreground px-5 py-6 text-sm">No interactions logged yet.</p>
+				{/if}
+			</Card.Root>
+		</div>
+	</div>
 </div>
