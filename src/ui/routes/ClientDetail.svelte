@@ -126,7 +126,7 @@
 				<div class="flex flex-col gap-2">
 					{#each client.projects as p (p.path)}
 						<div class="flex items-center justify-between text-sm">
-							<Button variant="link" size="sm" class="h-auto p-0" onclick={() => crm.openNote(p.path)}>{p.name}</Button>
+							<Button variant="link" size="sm" class="h-auto p-0" onclick={() => go({ name: 'project', path: p.path })}>{p.name}</Button>
 							<span class="text-muted-foreground flex items-center gap-2 text-xs"><StatusBadge status={p.status} /> {p.progress}%</span>
 						</div>
 					{/each}

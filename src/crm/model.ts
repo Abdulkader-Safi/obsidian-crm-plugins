@@ -93,6 +93,7 @@ function toProject(note: NoteRecord): Project {
 		dueDate: asString(fm.dueDate),
 		paymentTerms: asString(fm.paymentTerms),
 		milestones: toMilestones(fm.milestones),
+		notes: note.body.trim(),
 	};
 }
 

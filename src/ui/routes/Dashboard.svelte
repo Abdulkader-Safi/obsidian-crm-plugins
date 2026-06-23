@@ -184,7 +184,7 @@
 						</Table.Header>
 						<Table.Body>
 							{#each activeProjects as p (p.path)}
-								<Table.Row>
+								<Table.Row class="hover:bg-accent cursor-pointer" onclick={() => go({ name: 'project', path: p.path })}>
 									<Table.Cell class="text-foreground font-medium">{p.name}</Table.Cell>
 									<Table.Cell class="text-muted-foreground">{p.client ?? '—'}</Table.Cell>
 									<Table.Cell>

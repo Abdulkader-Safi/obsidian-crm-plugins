@@ -3,6 +3,7 @@ export type Route =
 	| { name: 'pipeline' }
 	| { name: 'clients' }
 	| { name: 'projects' }
-	| { name: 'client'; path: string };
+	| { name: 'client'; path: string }
+	| { name: 'project'; path: string };
 
 export type Go = (route: Route) => void;

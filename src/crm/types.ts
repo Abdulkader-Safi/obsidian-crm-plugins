@@ -110,6 +110,7 @@ export interface Project {
 	dueDate: string;
 	paymentTerms: string;
 	milestones: Milestone[];
+	notes: string;
 }
 
 export interface Client {

@@ -7,6 +7,8 @@
 	import Clients from './routes/Clients.svelte';
 	import Dashboard from './routes/Dashboard.svelte';
 	import ClientDetail from './routes/ClientDetail.svelte';
+	import Projects from './routes/Projects.svelte';
+	import ProjectDetail from './routes/ProjectDetail.svelte';
 	import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
 	import Kanban from '@lucide/svelte/icons/kanban';
 	import Users from '@lucide/svelte/icons/users';
@@ -43,6 +45,12 @@
 		if (route.name !== 'client') return undefined;
 		const path = route.path;
 		return model.clients.find((c) => c.path === path);
+	});
+
+	const activeProject = $derived.by(() => {
+		if (route.name !== 'project') return undefined;
+		const path = route.path;
+		return model.projects.find((p) => p.path === path);
 	});
 </script>
 
@@ -98,9 +106,17 @@
 			{:else}
 				<p class="text-muted-foreground text-sm">Client not found.</p>
 			{/if}
+		{:else if route.name === 'projects'}
+			<Projects {model} {search} {go} />
+		{:else if route.name === 'project'}
+			{#if activeProject}
+				<ProjectDetail project={activeProject} {model} {go} />
+			{:else}
+				<p class="text-muted-foreground text-sm">Project not found.</p>
+			{/if}
 		{:else}
 			<div class="text-muted-foreground flex h-full items-center justify-center text-sm">
-				{route.name === 'pipeline' ? 'Pipeline board' : 'Projects'} arrives in a later phase.
+				Pipeline board arrives in the next step.
 			</div>
 		{/if}
 	</main>
