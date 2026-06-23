@@ -1,29 +1,34 @@
 <script lang="ts">
 	import type { CrmStore } from '../../crm/store';
-	import { CLIENT_STATUSES, STATUS_LABELS, type ClientStatus } from '../../crm/types';
+	import { CLIENT_STATUSES, STATUS_LABELS, type ClientStatus, type Client } from '../../crm/types';
+	import { clientFrontmatter } from '../../crm/frontmatter';
 	import * as Field from '$lib/components/ui/field';
 	import * as Select from '$lib/components/ui/select';
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
 
-	let { store, close }: { store: CrmStore; close: () => void } = $props();
+	let { store, close, client }: { store: CrmStore; close: () => void; client?: Client } = $props();
 
-	let name = $state('');
-	let company = $state('');
-	let industry = $state('');
-	let country = $state('');
-	let region = $state('');
-	let status = $state('lead');
-	let service = $state('');
-	let estValue = $state('');
-	let leadSource = $state('');
-	let email = $state('');
-	let phone = $state('');
-	let website = $state('');
-	let contact = $state('');
-	let pitchAs = $state('Freelance');
-	let nextFollowUp = $state('');
-	let followUpNote = $state('');
+	// svelte-ignore state_referenced_locally
+	const c = client;
+	const isEdit = !!c;
+
+	let name = $state(c?.name ?? '');
+	let company = $state(c?.company ?? '');
+	let industry = $state(c?.industry ?? '');
+	let country = $state(c?.country ?? '');
+	let region = $state(c?.region ?? '');
+	let status = $state<string>(c?.status ?? 'lead');
+	let service = $state(c?.service ?? '');
+	let estValue = $state(c?.value ? String(c.value) : '');
+	let leadSource = $state(c?.leadSource ?? '');
+	let email = $state(c?.email ?? '');
+	let phone = $state(c?.phone ?? '');
+	let website = $state(c?.website ?? '');
+	let contact = $state(c?.contact ?? '');
+	let pitchAs = $state(c?.pitchAs ?? 'Freelance');
+	let nextFollowUp = $state(c?.nextFollowUp ?? '');
+	let followUpNote = $state(c?.followUpNote ?? '');
 	let saving = $state(false);
 
 	const statusOptions = CLIENT_STATUSES.map((s) => ({ value: s, label: STATUS_LABELS[s] }));
@@ -32,29 +37,31 @@
 	async function save() {
 		if (!name.trim() || saving) return;
 		saving = true;
+		const input = {
+			name: name.trim(),
+			status: status as ClientStatus,
+			company,
+			industry,
+			country,
+			region,
+			service,
+			value: Number(estValue) || 0,
+			currency: client?.currency || 'USD',
+			leadSource,
+			email,
+			phone,
+			website,
+			contact,
+			pitchAs,
+			nextFollowUp,
+			followUpNote,
+		};
 		try {
-			await store.createClient(
-				{
-					name: name.trim(),
-					status: status as ClientStatus,
-					company,
-					industry,
-					country,
-					region,
-					service,
-					value: Number(estValue) || 0,
-					currency: 'USD',
-					leadSource,
-					email,
-					phone,
-					website,
-					contact,
-					pitchAs,
-					nextFollowUp,
-					followUpNote,
-				},
-				followUpNote,
-			);
+			if (isEdit && client) {
+				await store.updateClient(client.path, clientFrontmatter(input));
+			} else {
+				await store.createClient(input, followUpNote);
+			}
 			close();
 		} finally {
 			saving = false;
@@ -62,13 +69,13 @@
 	}
 </script>
 
-<h2 class="text-foreground mb-4 text-base font-semibold">New client</h2>
+<h2 class="text-foreground mb-4 text-base font-semibold">{isEdit ? 'Edit client' : 'New client'}</h2>
 
 <Field.FieldGroup>
 	<div class="grid grid-cols-2 gap-4">
 		<Field.Field>
 			<Field.FieldLabel for="nc-name">Client name</Field.FieldLabel>
-			<Input id="nc-name" bind:value={name} placeholder="e.g. CoolPeak AC" />
+			<Input id="nc-name" bind:value={name} placeholder="e.g. CoolPeak AC" disabled={isEdit} />
 		</Field.Field>
 		<Field.Field>
 			<Field.FieldLabel for="nc-company">Company</Field.FieldLabel>
@@ -140,6 +147,6 @@
 	</Field.Field>
 	<Field.Field orientation="horizontal" class="justify-end">
 		<Button variant="outline" size="sm" onclick={close}>Cancel</Button>
-		<Button size="sm" disabled={!name.trim() || saving} onclick={save}>Create client</Button>
+		<Button size="sm" disabled={!name.trim() || saving} onclick={save}>{isEdit ? 'Save changes' : 'Create client'}</Button>
 	</Field.Field>
 </Field.FieldGroup>

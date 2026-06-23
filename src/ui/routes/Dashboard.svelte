@@ -269,7 +269,10 @@
 				{#if recent.length}
 					{#each recent as it (it.path)}
 						{@const Icon = actIcon(it)}
-						<div class="border-border flex gap-3 border-b px-5 py-3.5 last:border-0">
+						<button
+							class="border-border hover:bg-accent flex w-full gap-3 border-b px-5 py-3.5 text-left last:border-0"
+							onclick={() => crm.openModal('interaction-detail', { path: it.path })}
+						>
 							<span class="flex size-7 shrink-0 items-center justify-center rounded-full" style="background-color: {statusHue('lead')}22; color: {statusHue('lead')};">
 								<Icon class="size-3.5" />
 							</span>
@@ -280,7 +283,7 @@
 								</div>
 								{#if it.summary}<p class="text-muted-foreground mt-0.5 text-[13px]">{it.summary}</p>{/if}
 							</div>
-						</div>
+						</button>
 					{/each}
 				{:else}
 					<p class="text-muted-foreground px-5 py-6 text-sm">No interactions logged yet.</p>

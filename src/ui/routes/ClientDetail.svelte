@@ -47,6 +47,7 @@
 			<Button size="sm" variant="secondary" onclick={() => crm.openModal('log-interaction', { clientName: client.name })}>
 				Log interaction
 			</Button>
+			<Button size="sm" variant="outline" onclick={() => crm.openModal('new-client', { client })}>Edit</Button>
 			<Button size="sm" variant="outline" onclick={() => crm.openNote(client.path)}>Open note</Button>
 			<Button size="sm" variant="destructive" onclick={() => crm.openModal('delete-client', { clientPath: client.path })}>
 				Delete
@@ -86,10 +87,13 @@
 				<div class="flex flex-col gap-3">
 					{#each client.interactions as it (it.path)}
 						<div class="border-border border-b pb-2 last:border-0">
-							<div class="flex items-center justify-between">
+							<button
+								class="hover:bg-accent -mx-2 flex w-full items-center justify-between rounded px-2 py-1 text-left"
+								onclick={() => crm.openModal('interaction-detail', { path: it.path })}
+							>
 								<span class="text-foreground text-sm font-medium">{it.title}</span>
 								<span class="text-muted-foreground text-xs">{it.date}</span>
-							</div>
+							</button>
 							{#if it.summary}<p class="text-muted-foreground mt-1 text-sm">{it.summary}</p>{/if}
 						</div>
 					{/each}
