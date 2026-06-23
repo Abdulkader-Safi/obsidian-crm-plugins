@@ -1,6 +1,7 @@
 import { ItemView, WorkspaceLeaf } from 'obsidian';
 import { mount, unmount } from 'svelte';
 import type CrmPlugin from '../main';
+import { openCrmModal, type ModalKey } from './modals/host';
 
 export const CRM_VIEW_TYPE = 'crm-view';
 
@@ -36,7 +37,8 @@ export class CrmView extends ItemView {
 					store: this.plugin.store,
 					app: this.app,
 					openNote: (path: string) => void this.plugin.store.openNote(path),
-					openModal: () => {},
+					openModal: (key: string, props: Record<string, unknown>) =>
+						openCrmModal(this.app, this.plugin, key as ModalKey, props),
 				},
 			},
 		});
