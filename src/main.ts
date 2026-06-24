@@ -1,4 +1,4 @@
-import { Plugin, WorkspaceLeaf } from 'obsidian';
+import { Notice, Plugin, WorkspaceLeaf } from 'obsidian';
 import { DEFAULT_SETTINGS, CrmSettingTab } from './settings';
 import type { CrmSettings } from './settings';
 import { CrmView, CRM_VIEW_TYPE } from './ui/CrmView';
@@ -27,6 +27,16 @@ export default class CrmPlugin extends Plugin {
 			id: 'open-crm',
 			name: 'Open view',
 			callback: () => void this.activateView(),
+		});
+
+		this.addCommand({
+			id: 'install-agent-docs',
+			name: 'Install AI docs and templates',
+			callback: () => {
+				void this.store.installAgentDocs().then((path) => {
+					new Notice(`Installed CRM agent docs at ${path}`);
+				});
+			},
 		});
 
 		this.addSettingTab(new CrmSettingTab(this.app, this));

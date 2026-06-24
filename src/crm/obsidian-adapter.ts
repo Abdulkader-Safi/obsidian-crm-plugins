@@ -24,6 +24,7 @@ export class ObsidianVaultAdapter implements VaultAdapter {
 		const records: NoteRecord[] = [];
 		for (const file of this.app.vault.getMarkdownFiles()) {
 			if (file.path !== root && !file.path.startsWith(prefix)) continue;
+			if (file.path.includes('/_docs/')) continue;
 			const cache = this.app.metadataCache.getFileCache(file);
 			const fm = cache?.frontmatter;
 			if (!fm || typeof fm.crm !== 'string') continue;
@@ -79,6 +80,16 @@ export class ObsidianVaultAdapter implements VaultAdapter {
 		await this.app.fileManager.processFrontMatter(file, (fm) => {
 			Object.assign(fm, patch);
 		});
+	}
+
+	/** Write a raw markdown file (create or overwrite), ensuring its folder exists. */
+	async writeDoc(path: string, content: string): Promise<void> {
+		const p = normalizePath(path);
+		const slash = p.lastIndexOf('/');
+		if (slash > 0) await this.ensureFolder(p.slice(0, slash));
+		const existing = this.app.vault.getAbstractFileByPath(p);
+		if (existing instanceof TFile) await this.app.vault.modify(existing, content);
+		else await this.app.vault.create(p, content);
 	}
 
 	async editBody(path: string, transform: (body: string) => string): Promise<void> {

@@ -51,6 +51,14 @@ Notes about this opportunity.
 
 The dashboard rebuilds its view whenever a note in the folder changes, so editing a note by hand updates the CRM, and using the CRM updates the notes.
 
+### Use it with an AI agent
+
+If you drive your vault with an AI coding agent (Claude Code, etc.), open the plugin
+settings and use **Install AI docs and templates**. It writes a guide and entity templates
+into `CRM/_docs/` (excluded from the CRM index). Point your `CLAUDE.md` (or equivalent) at
+`CRM/_docs/CRM for AI agents.md` and the agent can create clients, deals, projects, log
+interactions, manage tasks, and answer questions using the documented conventions.
+
 ### Migrating from an earlier version
 
 If you used an earlier build where the client note itself held the sales stage and value, open the plugin settings and use **Migrate clients to deals**. Preview first; it creates a deal per client from the old fields and never deletes data.

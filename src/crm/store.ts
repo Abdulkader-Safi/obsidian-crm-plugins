@@ -11,6 +11,7 @@ import {
 	type DealInput,
 } from './frontmatter';
 import { appendTask, appendInteraction, setTaskDone } from './body';
+import { agentDocs } from './docs';
 import type { Client, CrmModel, Project, Deal, DealStage, Task } from './types';
 
 export interface InteractionEntry {
@@ -55,6 +56,7 @@ export interface VaultAdapter {
 	updateFrontmatter(path: string, patch: Record<string, unknown>): Promise<void>;
 	removeFrontmatterKeys(path: string, keys: string[]): Promise<void>;
 	editBody(path: string, transform: (body: string) => string): Promise<void>;
+	writeDoc(path: string, content: string): Promise<void>;
 	deleteNote(path: string): Promise<void>;
 	openNote(path: string): Promise<void>;
 }
@@ -216,6 +218,13 @@ export class CrmStore {
 
 	async openNote(path: string): Promise<void> {
 		await this.adapter.openNote(path);
+	}
+
+	/** Install the AI agent guide and entity templates into <root>/_docs. Returns the guide path. */
+	async installAgentDocs(): Promise<string> {
+		const docs = agentDocs(this.rootFolder());
+		for (const doc of docs) await this.adapter.writeDoc(doc.path, doc.content);
+		return docs[0]!.path;
 	}
 
 	/**

@@ -49,6 +49,23 @@ export class CrmSettingTab extends PluginSettingTab {
 					}),
 			);
 
+		new Setting(containerEl).setName('AI agents').setHeading();
+
+		new Setting(containerEl)
+			.setName('Install AI docs and templates')
+			.setDesc(
+				'Write a guide and entity templates into the CRM folder under _docs, so an AI agent (e.g. Claude) can learn the conventions. Reference _docs/CRM for AI agents.md from your CLAUDE.md.',
+			)
+			.addButton((btn) =>
+				btn
+					.setButtonText('Install')
+					.setCta()
+					.onClick(async () => {
+						const path = await this.plugin.store.installAgentDocs();
+						new Notice(`Installed CRM agent docs at ${path}`);
+					}),
+			);
+
 		new Setting(containerEl).setName('Migration').setHeading();
 
 		new Setting(containerEl)

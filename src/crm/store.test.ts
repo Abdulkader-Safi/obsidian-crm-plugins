@@ -31,6 +31,10 @@ class FakeAdapter implements VaultAdapter {
 		const note = this.notes.find((n) => n.path === path);
 		if (note) note.body = transform(note.body);
 	}
+	docs: { path: string; content: string }[] = [];
+	async writeDoc(path: string, content: string): Promise<void> {
+		this.docs.push({ path, content });
+	}
 	async deleteNote(path: string): Promise<void> {
 		this.deleted.push(path);
 		this.notes = this.notes.filter((n) => n.path !== path);
@@ -197,6 +201,19 @@ describe('migrateClientsToDeals', () => {
 
 		const again = await store.migrateClientsToDeals();
 		expect(again.created).toHaveLength(0);
+	});
+});
+
+describe('installAgentDocs', () => {
+	test('writes the guide and templates under _docs', async () => {
+		const { adapter, store } = makeStore();
+		const guide = await store.installAgentDocs();
+		expect(guide).toBe('CRM/_docs/CRM for AI agents.md');
+		const paths = adapter.docs.map((d) => d.path);
+		expect(paths).toContain('CRM/_docs/Templates/Client.md');
+		expect(paths).toContain('CRM/_docs/Templates/Deal.md');
+		expect(paths).toContain('CRM/_docs/Templates/Project.md');
+		expect(adapter.docs.find((d) => d.path === guide)!.content).toContain('crm: deal');
 	});
 });
 
