@@ -1,11 +1,11 @@
 {
-	"name": "svelte-plugin-template",
-	"version": "1.0.0",
-	"description": "A starter template for building Obsidian plugins with Svelte, Tailwind, and shadcn-svelte.",
+	"name": "vault-crm",
+	"version": "1.0.1",
+	"description": "A CRM for Obsidian that stores clients, deals, and projects as plain markdown notes.",
 	"author": "Abdulkader Safi <safi.abdulkader@gmail.com> (https://abdulkadersafi.com)",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/AbdulkaderSafi/svelte-plugin-template"
+		"url": "https://github.com/Abdulkader-Safi/obsidian-crm-plugins"
 	},
 	"main": "main.js",
 	"type": "module",
@@ -24,11 +24,9 @@
 	"keywords": [
 		"obsidian",
 		"obsidian-plugin",
+		"crm",
 		"svelte",
-		"tailwindcss",
-		"shadcn",
-		"template",
-		"starter-kit"
+		"tailwindcss"
 	],
 	"license": "0BSD",
 	"devDependencies": {
@@ -45,7 +43,7 @@
 		"globals": "^17.6.0",
 		"jiti": "^2.6.1",
 		"mode-watcher": "^1.1.0",
-		"npm-run-all": "^4.1.5",
+		"npm-run-all2": "^7.0.2",
 		"obsidian": "latest",
 		"svelte": "^5.56.3",
 		"svelte-check": "^4.6.0",
@@ -59,5 +57,9 @@
 		"clsx": "^2.1.1",
 		"tailwind-merge": "^3.6.0",
 		"tailwind-variants": "^3.2.2"
+	},
+	"overrides": {
+		"brace-expansion": "^2.0.2",
+		"js-yaml": "^4.1.0"
 	}
 }
