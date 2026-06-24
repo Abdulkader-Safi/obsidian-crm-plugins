@@ -103,7 +103,7 @@ bun run test     # run the unit tests
 bun run lint     # lint
 ```
 
-For local testing, work inside a vault at `VaultFolder/.obsidian/plugins/obsidian-crm-plugin/`, then reload Obsidian.
+For local testing, work inside a vault at `VaultFolder/.obsidian/plugins/vault-crm/`, then reload Obsidian.
 
 ## License
 
