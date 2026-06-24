@@ -8,8 +8,10 @@
  */
 @layer theme, base, components, utilities;
 @import "tailwindcss/theme.css" layer(theme);
-@import "tailwindcss/utilities.css" layer(utilities);
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
 
+/* Scan only the plugin UI. source(none) disables Tailwind's automatic project
+ * scan so stray tokens in docs/markdown never leak utilities into the output. */
 @source "./ui/**/*.{svelte,ts}";
 
 /*
@@ -87,6 +89,64 @@
 }
 .app-root button.crm-rowbtn:hover {
 	background: var(--background-modifier-hover);
+}
+
+/* Flush variant: a row button with no padding or hover fill (e.g. a card title). */
+.app-root button.crm-rowbtn.is-flush {
+	padding: 0;
+	border-radius: 0;
+}
+.app-root button.crm-rowbtn.is-flush:hover {
+	background: transparent;
+}
+
+/*
+ * Dashboard/page tab nav. Defined unlayered so Obsidian's default button chrome
+ * (background, border, padding, box-shadow) doesn't override the segmented look,
+ * without needing !important utilities.
+ */
+.app-root button.crm-tab {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	cursor: pointer;
+	appearance: none;
+	padding: 6px 12px;
+	border: 0;
+	border-radius: 8px;
+	background: transparent;
+	box-shadow: none;
+	color: var(--text-muted);
+	font: inherit;
+	font-size: 13px;
+	font-weight: 500;
+	transition:
+		color 0.15s,
+		background 0.15s;
+}
+.app-root button.crm-tab:hover {
+	color: var(--text-normal);
+}
+.app-root button.crm-tab.is-active {
+	background: var(--background-secondary);
+	color: var(--text-normal);
+	box-shadow: var(--shadow-s);
+}
+.app-root button.crm-tab.is-active svg {
+	color: var(--interactive-accent);
+}
+
+/* Outline button tinted with the error color (destructive action), no !important. */
+.app-root .crm-danger {
+	color: var(--text-error);
+	border-color: var(--text-error);
+}
+
+/* Selected state for a segmented toggle item (ToggleGroup), no !important. */
+.app-root .crm-seg[data-state="on"] {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-color: var(--interactive-accent);
 }
 
 @theme inline {

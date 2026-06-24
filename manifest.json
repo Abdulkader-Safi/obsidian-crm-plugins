@@ -1,7 +1,7 @@
 {
 	"id": "vault-crm",
 	"name": "Vault CRM",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"minAppVersion": "1.7.2",
 	"description": "A client and project CRM that stores everything as markdown notes in your vault and follows your theme.",
 	"author": "Abdulkader Safi",

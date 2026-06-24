@@ -18,13 +18,28 @@ export class ObsidianVaultAdapter implements VaultAdapter {
 		return this.cache;
 	}
 
+	/** Collect markdown files under the CRM folder only, skipping the _docs subfolder. */
+	private collectMarkdown(folder: TFolder, out: TFile[]): void {
+		for (const child of folder.children) {
+			if (child instanceof TFolder) {
+				if (child.name === '_docs') continue;
+				this.collectMarkdown(child, out);
+			} else if (child instanceof TFile && child.extension === 'md') {
+				out.push(child);
+			}
+		}
+	}
+
 	async refresh(): Promise<NoteRecord[]> {
-		const root = this.root();
-		const prefix = root + '/';
 		const records: NoteRecord[] = [];
-		for (const file of this.app.vault.getMarkdownFiles()) {
-			if (file.path !== root && !file.path.startsWith(prefix)) continue;
-			if (file.path.includes('/_docs/')) continue;
+		const folder = this.app.vault.getAbstractFileByPath(this.root());
+		if (!(folder instanceof TFolder)) {
+			this.cache = records;
+			return records;
+		}
+		const files: TFile[] = [];
+		this.collectMarkdown(folder, files);
+		for (const file of files) {
 			const cache = this.app.metadataCache.getFileCache(file);
 			const fm = cache?.frontmatter;
 			if (!fm || typeof fm.crm !== 'string') continue;

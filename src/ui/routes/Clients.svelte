@@ -131,7 +131,7 @@
 							<Button size="sm" disabled={!bulkTag.trim()} onclick={bulkAddTag}>Apply</Button>
 						</Popover.Content>
 					</Popover.Root>
-					<Button variant="outline" size="sm" class="text-destructive! border-destructive!" onclick={bulkDelete}>
+					<Button variant="outline" size="sm" class="crm-danger" onclick={bulkDelete}>
 						<Trash2 data-icon="inline-start" /> Delete
 					</Button>
 				</div>

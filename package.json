@@ -1,6 +1,6 @@
 {
 	"name": "vault-crm",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"description": "A CRM for Obsidian that stores clients, deals, and projects as plain markdown notes.",
 	"author": "Abdulkader Safi <safi.abdulkader@gmail.com> (https://abdulkadersafi.com)",
 	"repository": {
@@ -42,7 +42,6 @@
 		"eslint-plugin-obsidianmd": "^0.3.0",
 		"globals": "^17.6.0",
 		"jiti": "^2.6.1",
-		"mode-watcher": "^1.1.0",
 		"npm-run-all2": "^7.0.2",
 		"obsidian": "latest",
 		"svelte": "^5.56.3",

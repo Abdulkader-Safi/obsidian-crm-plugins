@@ -98,7 +98,7 @@
 						class="border-border bg-card flex cursor-grab flex-col gap-2 rounded-lg border p-2.5 active:cursor-grabbing"
 						class:opacity-50={dragPath === deal.path}
 					>
-						<button class="crm-rowbtn !px-0 !py-0 hover:!bg-transparent" onclick={() => go({ name: 'deal', path: deal.path })}>
+						<button class="crm-rowbtn is-flush" onclick={() => go({ name: 'deal', path: deal.path })}>
 							<span class="text-foreground truncate text-[12.5px] font-semibold">{deal.client ?? deal.service}</span>
 						</button>
 						{#if deal.service}

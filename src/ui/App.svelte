@@ -76,18 +76,8 @@
 			{#each tabs as tab (tab.name)}
 				{@const Icon = tab.icon}
 				{@const active = route.name === tab.name}
-				<button
-					type="button"
-					class={cn(
-						'flex cursor-pointer appearance-none items-center gap-1.5 text-[13px] font-medium transition-colors',
-						'rounded-lg! border-0! px-3! py-1.5! shadow-none!',
-						active
-							? 'bg-card! text-foreground! shadow-sm!'
-							: 'bg-transparent! text-muted-foreground! hover:text-foreground!',
-					)}
-					onclick={() => go({ name: tab.name })}
-				>
-					<Icon class={cn('size-4', active && 'text-primary!')} />
+				<button type="button" class={cn('crm-tab', active && 'is-active')} onclick={() => go({ name: tab.name })}>
+					<Icon class="size-4" />
 					{tab.label}
 				</button>
 			{/each}
