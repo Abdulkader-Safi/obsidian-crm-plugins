@@ -1,40 +1,42 @@
 # CRM
 
-A client and project CRM that lives inside Obsidian. Every client, project, interaction, and task is a plain markdown note in your vault, and the dashboard just reads and writes those notes. The interface follows your installed Obsidian theme and recolors with light and dark mode.
+A lightweight CRM that lives inside Obsidian. Track clients, deals, and projects, log every interaction, and keep your to-dos, without leaving your vault and without a cloud account.
+
+Every record is a plain markdown note in your vault. The plugin reads and writes those notes, so your data stays yours: it works with Obsidian links, search, and the graph, and it outlives the plugin. The interface follows your installed theme and recolors with light and dark mode.
 
 By [Abdulkader Safi](https://abdulkadersafi.com).
 
-## What it does
+## Features
 
-- A dashboard with a deal pipeline funnel, follow-ups due this week, a revenue snapshot, recent activity, and an active projects table.
-- A pipeline board (kanban) of deals you can drag between stages, a clients list, and a projects list.
-- Detail screens for clients (deals, contacts, interactions, tasks, projects), projects (milestones, tasks, scope), and deals.
-- Modals to add clients, deals, projects, log interactions, plus bulk actions and tags.
-- Everything is stored as markdown, so your data stays yours: it works with Obsidian links, search, and the graph, and outlives the plugin.
+- **Dashboard** with a deal pipeline funnel, follow-ups due this week (with overdue / due-today flags), a revenue snapshot, recent activity, and your active projects.
+- **Pipeline board** of deals you drag between stages (lead, proposal, negotiating, won, lost).
+- **Clients, Deals, and Projects** lists with filtering and search, plus a detail page for each.
+- **Deals** as first-class opportunities, so one client can have many over time. Repeat business is just a new deal, not a reset.
+- **Won a deal? Turn it into a project** in one click, with the link kept between them.
+- **Interactions and tasks** logged right inside each note. Project progress is calculated from the tasks you tick off.
+- **Tags, bulk actions**, and per-deal / per-client timelines.
+- **Follows your theme**: no fixed colors, it adapts to light, dark, and whatever theme you run.
+- **Local and offline**: no accounts, no network calls, no telemetry. It only touches notes in the folder you choose.
 
-## How it is modelled
+## Getting started
 
-The CRM separates the account, the sale, and the delivery, the way CRMs normally do:
+1. Install **CRM** from **Settings → Community plugins**, then enable it.
+2. Open the plugin settings and set your **CRM folder** (default `CRM`) and **default currency**.
+3. Open the CRM from the ribbon icon or the **Open view** command.
+4. Add a client, add a deal to it, then drag the deal across the pipeline as it progresses. When it is won, convert it to a project.
 
-- **Client (account)** — the company. Persistent; never "in the pipeline". Its relationship (prospect / active / past) is derived from its deals and projects.
-- **Deal (opportunity)** — a potential sale with a stage (`lead → proposal → negotiating → won / lost`), value, and follow-up. A client can have many deals over time, so repeat business is just another deal. The pipeline board is deals.
-- **Project** — delivery work, created from a won deal. Has its own status, budget, milestones, and tasks.
-- **Interaction** and **Task** — logged activity and to-dos, linked to a client and optionally a deal or project.
+## How your data is stored
 
-## How data is stored
-
-You pick one CRM folder in the settings (default `CRM`). The plugin reads and writes everything under it, creating typed subfolders as needed:
+You pick one CRM folder in the settings. The plugin keeps everything under it in typed subfolders, created as needed:
 
 ```
 CRM/
-  Clients/        CoolPeak AC.md
-  Deals/          CoolPeak AC - Website redesign.md
-  Projects/       Horizon Events Website.md
-  Interactions/   2026-06-21 CoolPeak AC - Follow-up call.md
-  Tasks/          Send proposal.md
+  Clients/    CoolPeak AC.md
+  Deals/      CoolPeak AC - Website redesign.md
+  Projects/   Horizon Events Website.md
 ```
 
-Each note carries a `crm` field in its frontmatter (`client`, `deal`, `project`, `interaction`, or `task`) and links to its parents with wikilinks. Structured fields live in frontmatter; the note body stays free for your own notes.
+Each note carries a `crm` field in its frontmatter (`client`, `deal`, or `project`) and links to its parents with wikilinks. Structured fields live in frontmatter; the note body is yours.
 
 ```yaml
 ---
@@ -49,73 +51,60 @@ nextFollowUp: 2026-07-02
 Notes about this opportunity.
 ```
 
-The dashboard rebuilds its view whenever a note in the folder changes, so editing a note by hand updates the CRM, and using the CRM updates the notes.
+**Tasks and interactions live inside the note body**, so they travel with the record:
 
-### Use it with an AI agent
+```markdown
+## Tasks
+- [ ] Send the proposal
+- [x] Kickoff call
 
-If you drive your vault with an AI coding agent (Claude Code, etc.), open the plugin
-settings and use **Install AI docs and templates**. It writes a guide and entity templates
-into `CRM/_docs/` (excluded from the CRM index). Point your `CLAUDE.md` (or equivalent) at
-`CRM/_docs/CRM for AI agents.md` and the agent can create clients, deals, projects, log
-interactions, manage tasks, and answer questions using the documented conventions.
+## Interactions
+- 2026-06-23 | email | Follow up | Sent a follow-up after no reply.
+```
 
-### Migrating from an earlier version
+Because the CRM is just reading and writing these notes, editing a note by hand updates the CRM, and using the CRM updates the notes. The view refreshes whenever a note in the folder changes.
 
-If you used an earlier build where the client note itself held the sales stage and value, open the plugin settings and use **Migrate clients to deals**. Preview first; it creates a deal per client from the old fields and never deletes data.
+## How it is modelled
 
-## Use it
+The CRM keeps the account, the sale, and the delivery separate, the way CRMs normally do:
 
-1. Build the plugin (see below) or copy `main.js`, `manifest.json`, and `styles.css` into `VaultFolder/.obsidian/plugins/obsidian-crm-plugin/`.
-2. Enable **CRM** in **Settings → Community plugins**.
-3. Open the plugin settings and set your CRM folder and default currency.
-4. Open the CRM from the ribbon contact icon or the **Open view** command.
+- **Client** is the account. It is never "in the pipeline"; its relationship (prospect, active, past) is worked out from its deals and projects.
+- **Deal** is one opportunity with a stage, value, and follow-up. The pipeline board is deals.
+- **Project** is the delivery work, usually created from a won deal, with its own status, budget, milestones, and tasks.
 
-## Develop
+## Use it with an AI agent
 
-Install and build with [bun](https://bun.sh).
+If you drive your vault with an AI coding agent (Claude Code and similar), open the plugin settings and use **Install AI docs and templates**. It writes a guide and entity templates into `CRM/_docs/` (kept out of the CRM index). Point your agent instructions (for example `CLAUDE.md`) at `CRM/_docs/CRM for AI agents.md`, and the agent can create clients, deals, and projects, log interactions, manage tasks, and answer questions using the documented conventions.
+
+## Settings
+
+- **CRM folder**: where all records are stored.
+- **Default currency**: applied to new deals and projects.
+- **Install AI docs and templates**: write the agent guide and templates (see above).
+- **Migrate clients to deals**: if you used an early version where the client note held the sales stage and value, this moves those fields into a deal per client. Preview first; it never deletes data.
+
+## Privacy
+
+The plugin works entirely on local markdown files in the folder you choose. It makes no network requests, stores nothing outside your vault, and collects no analytics.
+
+## Support
+
+If this plugin is useful, you can support the work at [ko-fi.com/abdulkadersafi](https://ko-fi.com/abdulkadersafi).
+
+## Development
+
+Built with Svelte 5, Tailwind CSS v4, shadcn-svelte, and esbuild. Install and build with [bun](https://bun.sh):
 
 ```bash
 bun install      # install dependencies
 bun run dev      # compile JS and CSS in watch mode
-bun run build    # type-check, then production build
+bun run build    # type-check (svelte-check), then production build
 bun run test     # run the unit tests
-bun run lint     # lint with ESLint
+bun run lint     # lint
 ```
 
-`bun run dev` runs two watchers: esbuild compiles `src/main.ts` to `main.js`, and the Tailwind CLI compiles `src/styles.css` to `styles.css`. Reload Obsidian to pick up changes.
-
-For local testing, develop inside your vault at `VaultFolder/.obsidian/plugins/obsidian-crm-plugin/`.
-
-## How it is built
-
-- TypeScript plugin entry (`src/main.ts`) handling the lifecycle: settings, the view, the ribbon icon, the command, and vault change events.
-- A data layer in `src/crm/`: domain types, frontmatter helpers, a pure note indexer, and a `CrmStore` that reads and writes notes through a vault adapter. The pure logic is covered by unit tests (`bun run test`).
-- A Svelte 5 app in `src/ui/` mounted into an Obsidian `ItemView`, with a small router and screens for the dashboard, clients, and client detail.
-- UI built from [shadcn-svelte](https://shadcn-svelte.com) components under `src/ui/lib/components/`, added with the shadcn-svelte CLI.
-
-## How the styling works
-
-Tailwind's Preflight reset is left out so Tailwind does not override Obsidian's own UI. The Svelte app mounts into an `.app-root` element, and shadcn-svelte's tokens (`--primary`, `--background`, and so on) are mapped onto Obsidian's theme variables in `src/styles.css`. Because they resolve at runtime, switching theme or light and dark mode recolors every component with no rebuild. Components that render in a portal (dropdowns, popovers) are themed through the same tokens. Status colors (lead through lost) are a small fixed palette tinted to read on any surface.
-
-Type checking uses `svelte-check` so the build understands Svelte components and their exports.
-
-## Release
-
-- Bump `version` in `manifest.json` (Semantic Versioning) and update `versions.json` to map plugin version to minimum app version.
-- Push a tag that exactly matches the `manifest.json` version, with no leading `v`. The release workflow builds the plugin and creates a draft GitHub release with `main.js`, `manifest.json`, and `styles.css` attached.
-- Publish the draft release.
-
-## Funding
-
-If this plugin is useful, you can support the work at [ko-fi.com/abdulkadersafi](https://ko-fi.com/abdulkadersafi).
+For local testing, work inside a vault at `VaultFolder/.obsidian/plugins/obsidian-crm-plugin/`, then reload Obsidian.
 
 ## License
 
 Released under the 0BSD license. See [LICENSE](LICENSE).
-
-## References
-
-- [Obsidian API docs](https://docs.obsidian.md)
-- [Svelte](https://svelte.dev)
-- [Tailwind CSS](https://tailwindcss.com)
-- [shadcn-svelte](https://shadcn-svelte.com)
