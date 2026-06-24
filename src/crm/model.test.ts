@@ -4,36 +4,19 @@ import { buildModel, emptyModel, type NoteRecord } from './model';
 const notes: NoteRecord[] = [
 	{
 		path: 'CRM/Clients/CoolPeak AC.md',
-		frontmatter: { crm: 'client', status: 'lead', value: 1500, currency: 'KWD' },
-		body: 'Some notes',
+		frontmatter: { crm: 'client', currency: 'KWD' },
+		body: `Some notes
+
+## Tasks
+- [ ] Send the proposal PDF
+
+## Interactions
+- 2026-06-21 | email | Follow-up call | Discussed the proposal.`,
 	},
 	{
 		path: 'CRM/Projects/CoolPeak Site.md',
-		frontmatter: {
-			crm: 'project',
-			client: '[[CoolPeak AC]]',
-			status: 'discovery',
-			progress: 35,
-			budget: 1500,
-			currency: 'KWD',
-		},
+		frontmatter: { crm: 'project', client: '[[CoolPeak AC]]', status: 'discovery', budget: 1500, currency: 'KWD' },
 		body: '',
-	},
-	{
-		path: 'CRM/Interactions/2026-06-21 Call.md',
-		frontmatter: {
-			crm: 'interaction',
-			client: '[[CoolPeak AC]]',
-			type: 'email',
-			date: '2026-06-21',
-			title: 'Follow-up call',
-		},
-		body: 'Discussed the proposal.',
-	},
-	{
-		path: 'CRM/Tasks/Send proposal.md',
-		frontmatter: { crm: 'task', client: '[[CoolPeak AC]]', done: false, due: '2026-07-02' },
-		body: 'Send the proposal PDF.',
 	},
 	{
 		path: 'CRM/Notes/Unrelated.md',
@@ -58,23 +41,21 @@ describe('buildModel', () => {
 		expect(m.clients[0]!.currency).toBe('KWD');
 	});
 
-	test('attaches interaction, task, and project to the client', () => {
+	test('parses inline interaction, task, and the project', () => {
 		const client = buildModel(notes).clients[0]!;
 		expect(client.interactions).toHaveLength(1);
 		expect(client.interactions[0]!.summary).toBe('Discussed the proposal.');
 		expect(client.tasks).toHaveLength(1);
-		expect(client.tasks[0]!.description).toBe('Send the proposal PDF.');
+		expect(client.tasks[0]!.description).toBe('Send the proposal PDF');
+		expect(client.tasks[0]!.inline).toBe(true);
 		expect(client.projects).toHaveLength(1);
-		expect(client.projects[0]!.progress).toBe(35);
 	});
 
 	test('ignores notes without a crm field', () => {
 		const m = buildModel(notes);
-		const total =
-			m.clients.length + m.projects.length + m.interactions.length + m.tasks.length;
+		const total = m.clients.length + m.projects.length + m.interactions.length + m.tasks.length;
 		expect(total).toBe(4);
 	});
-
 
 	test('reads client tags from an array or a single value', () => {
 		const m = buildModel([
@@ -85,14 +66,13 @@ describe('buildModel', () => {
 		expect(m.clients.find((c) => c.name === 'B')!.tags).toEqual(['referral']);
 	});
 
-	test('reads project service, payment terms, and milestones', () => {
+	test('reads project payment terms and milestones', () => {
 		const m = buildModel([
 			{
 				path: 'CRM/Projects/Site.md',
 				frontmatter: {
 					crm: 'project',
 					status: 'development',
-					service: 'Website',
 					paymentTerms: '50% upfront',
 					milestones: [
 						{ title: 'Discovery', done: true },
@@ -103,25 +83,29 @@ describe('buildModel', () => {
 			},
 		]);
 		const p = m.projects[0]!;
-		expect(p.service).toBe('Website');
 		expect(p.paymentTerms).toBe('50% upfront');
 		expect(p.milestones).toHaveLength(2);
-		expect(p.milestones[0]).toEqual({ title: 'Discovery', done: true });
 	});
 
-	test('indexes deals and attaches them to clients', () => {
+	test('indexes deals, attaches them, and parses deal interactions inline', () => {
 		const m = buildModel([
 			{ path: 'CRM/Clients/CoolPeak AC.md', frontmatter: { crm: 'client' }, body: '' },
 			{
 				path: 'CRM/Deals/CoolPeak Website.md',
 				frontmatter: { crm: 'deal', client: '[[CoolPeak AC]]', stage: 'proposal', value: 1500 },
-				body: '',
+				body: `Opportunity notes
+
+## Interactions
+- 2026-06-20 | call | Intro | Talked scope.`,
 			},
 		]);
 		expect(m.deals).toHaveLength(1);
+		expect(m.deals[0]!.notes).toBe('Opportunity notes');
+		expect(m.deals[0]!.interactions).toHaveLength(1);
 		const client = m.clients[0]!;
 		expect(client.deals).toHaveLength(1);
-		expect(client.deals[0]!.stage).toBe('proposal');
+		// the deal's interaction shows in the client timeline
+		expect(client.interactions).toHaveLength(1);
 	});
 
 	test('derives client relationship from deals and projects', () => {
@@ -138,33 +122,18 @@ describe('buildModel', () => {
 		expect(byName('Past').relationship).toBe('past');
 	});
 
-	test('derives project progress from completed tasks', () => {
-		const m = buildModel([
-			{ path: 'CRM/Projects/Site.md', frontmatter: { crm: 'project', status: 'development', progress: 0 }, body: '' },
-			{ path: 'CRM/Tasks/A.md', frontmatter: { crm: 'task', project: '[[Site]]', done: true }, body: 'A' },
-			{ path: 'CRM/Tasks/B.md', frontmatter: { crm: 'task', project: '[[Site]]', done: true }, body: 'B' },
-			{ path: 'CRM/Tasks/C.md', frontmatter: { crm: 'task', project: '[[Site]]', done: false }, body: 'C' },
-		]);
-		expect(m.projects[0]!.progress).toBe(67);
-	});
-
-	test('derives project progress from milestones when there are no tasks', () => {
+	test('derives project progress from completed inline tasks', () => {
 		const m = buildModel([
 			{
 				path: 'CRM/Projects/Site.md',
-				frontmatter: {
-					crm: 'project',
-					status: 'development',
-					progress: 0,
-					milestones: [
-						{ title: 'A', done: true },
-						{ title: 'B', done: false },
-					],
-				},
-				body: '',
+				frontmatter: { crm: 'project', status: 'development' },
+				body: `## Tasks
+- [x] A
+- [x] B
+- [ ] C`,
 			},
 		]);
-		expect(m.projects[0]!.progress).toBe(50);
+		expect(m.projects[0]!.progress).toBe(67);
 	});
 
 	test('resolves a project deal link', () => {

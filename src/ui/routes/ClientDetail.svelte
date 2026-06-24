@@ -47,7 +47,7 @@
 
 	async function addTask() {
 		if (!newTask.trim()) return;
-		await crm.store.createTask(newTask.trim(), { clientName: client.name });
+		await crm.store.addTask(client.path, newTask.trim());
 		newTask = '';
 	}
 </script>
@@ -74,7 +74,7 @@
 				</div>
 			</div>
 			<div class="flex shrink-0 gap-2">
-				<Button size="sm" variant="secondary" onclick={() => crm.openModal('log-interaction', { clientName: client.name })}>
+				<Button size="sm" variant="secondary" onclick={() => crm.openModal('log-interaction', { targetPath: client.path, targetLabel: client.name })}>
 					Log interaction
 				</Button>
 				<Button size="sm" variant="outline" onclick={() => crm.openModal('new-client', { client })}>Edit</Button>
@@ -131,7 +131,7 @@
 					{#if client.deals.length}
 						<div class="flex flex-col gap-1">
 							{#each client.deals as d (d.path)}
-								<button class="crm-rowbtn -mx-2" onclick={() => crm.openModal('deal-detail', { path: d.path })}>
+								<button class="crm-rowbtn -mx-2" onclick={() => go({ name: 'deal', path: d.path })}>
 									<span class="flex min-w-0 flex-1 items-center gap-2">
 										<span class="text-foreground truncate text-sm font-medium">{d.service || d.name}</span>
 										<StatusBadge status={d.stage} />
@@ -151,9 +151,9 @@
 				<Card.Content>
 					{#if client.interactions.length}
 						<div class="flex flex-col gap-3">
-							{#each client.interactions as it (it.path)}
+							{#each client.interactions as it (it.name)}
 								<div class="border-border border-b pb-2 last:border-0">
-									<button class="crm-rowbtn -mx-2" onclick={() => crm.openModal('interaction-detail', { path: it.path })}>
+									<button class="crm-rowbtn -mx-2" onclick={() => crm.openNote(it.path)}>
 										<span class="text-foreground flex-1 text-sm font-medium">{it.title}</span>
 										<span class="text-muted-foreground shrink-0 font-mono text-xs">{it.date}</span>
 									</button>
@@ -172,11 +172,13 @@
 				<Card.Content class="flex flex-col gap-3">
 					{#if client.tasks.length}
 						<div class="flex flex-col gap-2">
-							{#each client.tasks as task (task.path)}
-								<div class="flex items-center gap-2 text-sm">
-									<Checkbox checked={task.done} onCheckedChange={(v) => crm.store.toggleTask(task.path, v === true)} />
-									<span class="text-foreground" class:line-through={task.done}>{task.description}</span>
-									{#if task.due}<span class="text-muted-foreground ml-auto font-mono text-xs">{task.due}</span>{/if}
+							{#each client.tasks as task (task.name)}
+								<div class="text-sm">
+									<div class="flex items-center gap-2">
+										<Checkbox checked={task.done} onCheckedChange={(v) => crm.store.toggleTask(task, v === true)} />
+										<span class="text-foreground" class:line-through={task.done}>{task.description}</span>
+									</div>
+									{#if task.notes}<p class="text-muted-foreground mt-0.5 pl-6 text-xs whitespace-pre-wrap">{task.notes}</p>{/if}
 								</div>
 							{/each}
 						</div>

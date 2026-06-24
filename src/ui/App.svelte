@@ -10,6 +10,7 @@
 	import Projects from './routes/Projects.svelte';
 	import ProjectDetail from './routes/ProjectDetail.svelte';
 	import Pipeline from './routes/Pipeline.svelte';
+	import DealDetail from './routes/DealDetail.svelte';
 	import { Toaster } from '$lib/components/ui/sonner';
 	import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
 	import Kanban from '@lucide/svelte/icons/kanban';
@@ -53,6 +54,12 @@
 		if (route.name !== 'project') return undefined;
 		const path = route.path;
 		return model.projects.find((p) => p.path === path);
+	});
+
+	const activeDeal = $derived.by(() => {
+		if (route.name !== 'deal') return undefined;
+		const path = route.path;
+		return model.deals.find((d) => d.path === path);
 	});
 </script>
 
@@ -119,6 +126,12 @@
 				<ProjectDetail project={activeProject} {model} {go} />
 			{:else}
 				<p class="text-muted-foreground text-sm">Project not found.</p>
+			{/if}
+		{:else if route.name === 'deal'}
+			{#if activeDeal}
+				<DealDetail deal={activeDeal} {model} {go} />
+			{:else}
+				<p class="text-muted-foreground text-sm">Deal not found.</p>
 			{/if}
 		{/if}
 	</main>

@@ -81,6 +81,16 @@ export class ObsidianVaultAdapter implements VaultAdapter {
 		});
 	}
 
+	async editBody(path: string, transform: (body: string) => string): Promise<void> {
+		const file = this.app.vault.getAbstractFileByPath(normalizePath(path));
+		if (!(file instanceof TFile)) return;
+		await this.app.vault.process(file, (data) => {
+			const { frontmatter, body } = splitFrontmatterBlock(data);
+			const next = transform(body);
+			return frontmatter ? `${frontmatter}\n${next}` : next;
+		});
+	}
+
 	async removeFrontmatterKeys(path: string, keys: string[]): Promise<void> {
 		const file = this.app.vault.getAbstractFileByPath(normalizePath(path));
 		if (!(file instanceof TFile)) return;
@@ -103,12 +113,20 @@ export class ObsidianVaultAdapter implements VaultAdapter {
 }
 
 function stripFrontmatter(raw: string): string {
+	return splitFrontmatterBlock(raw).body;
+}
+
+// Split a note into its frontmatter block (including the --- fences) and the body.
+function splitFrontmatterBlock(raw: string): { frontmatter: string; body: string } {
 	if (raw.startsWith('---')) {
 		const end = raw.indexOf('\n---', 3);
 		if (end !== -1) {
 			const after = raw.indexOf('\n', end + 1);
-			return after !== -1 ? raw.slice(after + 1).trim() : '';
+			if (after !== -1) {
+				return { frontmatter: raw.slice(0, after), body: raw.slice(after + 1) };
+			}
+			return { frontmatter: raw, body: '' };
 		}
 	}
-	return raw.trim();
+	return { frontmatter: '', body: raw };
 }

@@ -4,6 +4,7 @@ export type Route =
 	| { name: 'clients' }
 	| { name: 'projects' }
 	| { name: 'client'; path: string }
-	| { name: 'project'; path: string };
+	| { name: 'project'; path: string }
+	| { name: 'deal'; path: string };
 
 export type Go = (route: Route) => void;

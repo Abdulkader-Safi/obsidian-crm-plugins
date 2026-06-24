@@ -1,4 +1,4 @@
-import type { InteractionType, ProjectStatus, DealStage } from './types';
+import type { ProjectStatus, DealStage } from './types';
 
 export function parseWikilink(value: unknown): string | null {
 	if (typeof value !== 'string') return null;
@@ -74,34 +74,6 @@ export function clientFrontmatter(input: ClientInput): Record<string, unknown> {
 	};
 }
 
-export interface InteractionInput {
-	clientName: string;
-	projectName?: string | null;
-	type: InteractionType;
-	medium?: string;
-	date: string;
-	duration?: number;
-	title: string;
-	nextAction?: string;
-}
-
-export function interactionFrontmatter(
-	input: InteractionInput,
-): Record<string, unknown> {
-	const fm: Record<string, unknown> = {
-		crm: 'interaction',
-		client: toWikilink(input.clientName),
-		type: input.type,
-		medium: input.medium ?? '',
-		date: input.date,
-		duration: input.duration ?? 0,
-		title: input.title,
-		nextAction: input.nextAction ?? '',
-	};
-	if (input.projectName) fm.project = toWikilink(input.projectName);
-	return fm;
-}
-
 export interface ProjectInput {
 	name: string;
 	clientName?: string | null;
@@ -163,23 +135,5 @@ export function dealFrontmatter(input: DealInput): Record<string, unknown> {
 		opened: input.opened ?? '',
 	};
 	if (input.clientName) fm.client = toWikilink(input.clientName);
-	return fm;
-}
-
-export interface TaskInput {
-	clientName?: string | null;
-	projectName?: string | null;
-	done?: boolean;
-	due?: string;
-}
-
-export function taskFrontmatter(input: TaskInput): Record<string, unknown> {
-	const fm: Record<string, unknown> = {
-		crm: 'task',
-		done: input.done ?? false,
-		due: input.due ?? '',
-	};
-	if (input.clientName) fm.client = toWikilink(input.clientName);
-	if (input.projectName) fm.project = toWikilink(input.projectName);
 	return fm;
 }

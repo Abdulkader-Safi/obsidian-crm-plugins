@@ -169,7 +169,7 @@
 							</div>
 							<div class="min-w-0 flex-1">
 								<div class="flex flex-wrap items-center gap-2.5">
-									<button class="text-foreground text-sm font-semibold hover:underline" onclick={() => crm.openModal('deal-detail', { path: deal.path })}>
+									<button class="text-foreground text-sm font-semibold hover:underline" onclick={() => go({ name: 'deal', path: deal.path })}>
 										{deal.client ?? deal.service}
 									</button>
 									{#if deal.service}
@@ -185,7 +185,7 @@
 								{/if}
 							</div>
 							{#if deal.client}
-								<Button variant="outline" size="sm" onclick={() => crm.openModal('log-interaction', { clientName: deal.client })}>
+								<Button variant="outline" size="sm" onclick={() => crm.openModal('log-interaction', { targetPath: deal.path, targetLabel: deal.service })}>
 									<MessageSquarePlus data-icon="inline-start" /> Log
 								</Button>
 							{/if}
@@ -300,11 +300,11 @@
 					<button class="text-primary text-xs font-medium hover:underline">View log</button>
 				</div>
 				{#if recent.length}
-					{#each recent as it (it.path)}
+					{#each recent as it (it.name)}
 						{@const Icon = actIcon(it)}
 						<button
 							class="border-border hover:bg-accent flex w-full gap-3 border-b px-5 py-3.5 text-left last:border-0"
-							onclick={() => crm.openModal('interaction-detail', { path: it.path })}
+							onclick={() => crm.openNote(it.path)}
 						>
 							<span class="flex size-7 shrink-0 items-center justify-center rounded-full" style="background-color: {statusHue('lead')}22; color: {statusHue('lead')};">
 								<Icon class="size-3.5" />

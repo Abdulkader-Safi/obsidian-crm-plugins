@@ -5,27 +5,21 @@ import NewClient from './NewClient.svelte';
 import LogInteraction from './LogInteraction.svelte';
 import DeleteConfirm from './DeleteConfirm.svelte';
 import NewProject from './NewProject.svelte';
-import InteractionDetail from './InteractionDetail.svelte';
 import NewDeal from './NewDeal.svelte';
-import DealDetail from './DealDetail.svelte';
 
 export type ModalKey =
 	| 'new-client'
 	| 'log-interaction'
 	| 'delete-client'
 	| 'new-project'
-	| 'interaction-detail'
-	| 'new-deal'
-	| 'deal-detail';
+	| 'new-deal';
 
 const COMPONENTS = {
 	'new-client': NewClient,
 	'log-interaction': LogInteraction,
 	'delete-client': DeleteConfirm,
 	'new-project': NewProject,
-	'interaction-detail': InteractionDetail,
 	'new-deal': NewDeal,
-	'deal-detail': DealDetail,
 } as const;
 
 export function openCrmModal(

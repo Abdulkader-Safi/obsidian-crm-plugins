@@ -14,7 +14,7 @@
 	let { project, model, go }: { project: Project; model: CrmModel; go: Go } = $props();
 	const crm = getCrm();
 
-	const tasks = $derived(model.tasks.filter((t) => t.project === project.name));
+	const tasks = $derived(project.tasks);
 	const statusOptions = PROJECT_STATUSES.map((s) => ({ value: s, label: PROJECT_STATUS_LABELS[s] }));
 
 	const details = $derived([
@@ -39,10 +39,7 @@
 
 	async function addTask() {
 		if (!newTask.trim()) return;
-		await crm.store.createTask(newTask.trim(), {
-			projectName: project.name,
-			clientName: project.client,
-		});
+		await crm.store.addTask(project.path, newTask.trim());
 		newTask = '';
 	}
 
@@ -128,10 +125,13 @@
 		<Card.Content class="flex flex-col gap-3 p-0">
 			{#if tasks.length}
 				<div class="flex flex-col gap-2">
-					{#each tasks as task (task.path)}
-						<div class="flex items-center gap-2 text-sm">
-							<Checkbox checked={task.done} onCheckedChange={(v) => crm.store.toggleTask(task.path, v === true)} />
-							<span class="text-foreground" class:line-through={task.done}>{task.description}</span>
+					{#each tasks as task (task.name)}
+						<div class="text-sm">
+							<div class="flex items-center gap-2">
+								<Checkbox checked={task.done} onCheckedChange={(v) => crm.store.toggleTask(task, v === true)} />
+								<span class="text-foreground" class:line-through={task.done}>{task.description}</span>
+							</div>
+							{#if task.notes}<p class="text-muted-foreground mt-0.5 pl-6 text-xs whitespace-pre-wrap">{task.notes}</p>{/if}
 						</div>
 					{/each}
 				</div>

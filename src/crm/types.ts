@@ -77,6 +77,9 @@ export interface Task {
 	done: boolean;
 	due: string;
 	description: string;
+	notes: string;
+	inline: boolean;
+	index: number;
 }
 
 export interface Milestone {
@@ -99,6 +102,7 @@ export interface Deal {
 	outcomeReason: string;
 	opened: string;
 	notes: string;
+	interactions: Interaction[];
 }
 
 export interface Project {
@@ -116,6 +120,8 @@ export interface Project {
 	paymentTerms: string;
 	milestones: Milestone[];
 	notes: string;
+	tasks: Task[];
+	interactions: Interaction[];
 }
 
 export interface Client {

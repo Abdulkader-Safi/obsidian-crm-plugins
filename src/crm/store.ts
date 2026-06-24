@@ -1,20 +1,24 @@
 import { buildModel, emptyModel, type NoteRecord } from './model';
 import {
 	clientFrontmatter,
-	interactionFrontmatter,
 	projectFrontmatter,
-	taskFrontmatter,
 	dealFrontmatter,
 	noteBasename,
 	asString,
 	asNumber,
 	type ClientInput,
-	type InteractionInput,
 	type ProjectInput,
-	type TaskInput,
 	type DealInput,
 } from './frontmatter';
-import type { Client, CrmModel, Project, Deal, DealStage } from './types';
+import { appendTask, appendInteraction, setTaskDone } from './body';
+import type { Client, CrmModel, Project, Deal, DealStage, Task } from './types';
+
+export interface InteractionEntry {
+	date: string;
+	type: string;
+	title: string;
+	summary: string;
+}
 
 const LEGACY_SALES_KEYS = ['status', 'value', 'service', 'leadSource', 'nextFollowUp', 'followUpNote'];
 
@@ -50,6 +54,7 @@ export interface VaultAdapter {
 	): Promise<string>;
 	updateFrontmatter(path: string, patch: Record<string, unknown>): Promise<void>;
 	removeFrontmatterKeys(path: string, keys: string[]): Promise<void>;
+	editBody(path: string, transform: (body: string) => string): Promise<void>;
 	deleteNote(path: string): Promise<void>;
 	openNote(path: string): Promise<void>;
 }
@@ -102,31 +107,23 @@ export class CrmStore {
 		return path;
 	}
 
-	async logInteraction(input: InteractionInput, summary: string): Promise<string> {
-		const name = sanitizeFileName(`${input.date} ${input.clientName} - ${input.title}`);
-		const path = await this.adapter.createNote(
-			this.folder('Interactions'),
-			name,
-			interactionFrontmatter(input),
-			summary,
-		);
+	/** Append an interaction (and optional next-action task) to a note's body. */
+	async logInteraction(targetPath: string, entry: InteractionEntry, nextAction = ''): Promise<void> {
+		await this.adapter.editBody(targetPath, (body) => appendInteraction(body, entry));
+		if (nextAction.trim()) {
+			await this.adapter.editBody(targetPath, (body) => appendTask(body, nextAction.trim()));
+		}
 		this.reindex();
-		return path;
 	}
 
-	async createTask(description: string, input: TaskInput): Promise<string> {
-		const path = await this.adapter.createNote(
-			this.folder('Tasks'),
-			sanitizeFileName(description),
-			taskFrontmatter(input),
-			description,
-		);
+	/** Append a checkbox task to a note's body. */
+	async addTask(targetPath: string, text: string): Promise<void> {
+		await this.adapter.editBody(targetPath, (body) => appendTask(body, text));
 		this.reindex();
-		return path;
 	}
 
-	async toggleTask(path: string, done: boolean): Promise<void> {
-		await this.adapter.updateFrontmatter(path, { done });
+	async toggleTask(task: Task, done: boolean): Promise<void> {
+		await this.adapter.editBody(task.path, (body) => setTaskDone(body, task.index, done));
 		this.reindex();
 	}
 
@@ -160,9 +157,7 @@ export class CrmStore {
 	}
 
 	async deleteProject(project: Project): Promise<void> {
-		const tasks = this.model.tasks.filter((t) => t.project === project.name);
 		await this.adapter.deleteNote(project.path);
-		for (const task of tasks) await this.adapter.deleteNote(task.path);
 		this.reindex();
 	}
 
@@ -213,8 +208,6 @@ export class CrmStore {
 		const targets = [
 			client.path,
 			...client.projects.map((p) => p.path),
-			...client.interactions.map((i) => i.path),
-			...client.tasks.map((t) => t.path),
 			...client.deals.map((d) => d.path),
 		];
 		for (const path of targets) await this.adapter.deleteNote(path);
