@@ -115,14 +115,16 @@
 						<div class="flex flex-col gap-3">
 							{#each deal.interactions as it (it.name)}
 								<div class="border-border border-b pb-2 last:border-0">
-									<div class="flex items-center justify-between gap-2">
-										<span class="text-foreground text-sm font-medium">{it.title}</span>
-										<span class="text-muted-foreground flex items-center gap-2 font-mono text-xs">
-											<StatusBadge status={it.type} label={INTERACTION_LABELS[it.type]} />
-											{it.date}
+									<button class="crm-cardbtn -mx-2 rounded-lg px-2 py-1.5" onclick={() => crm.openNote(it.path)}>
+										<span class="flex items-center justify-between gap-2">
+											<span class="text-foreground text-sm font-medium">{it.title}</span>
+											<span class="text-muted-foreground flex shrink-0 items-center gap-2 font-mono text-xs">
+												<StatusBadge status={it.type} label={INTERACTION_LABELS[it.type]} />
+												{it.date}
+											</span>
 										</span>
-									</div>
-									{#if it.summary}<p class="text-muted-foreground mt-1 text-sm">{it.summary}</p>{/if}
+										{#if it.summary}<span class="text-muted-foreground text-sm">{it.summary}</span>{/if}
+									</button>
 								</div>
 							{/each}
 						</div>

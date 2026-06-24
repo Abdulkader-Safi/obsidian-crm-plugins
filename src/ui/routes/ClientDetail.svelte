@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Client } from '../../crm/types';
+	import { INTERACTION_LABELS } from '../../crm/types';
 	import type { Go } from '../router';
 	import { getCrm } from '../context';
 	import * as Card from '$lib/components/ui/card';
@@ -153,11 +154,16 @@
 						<div class="flex flex-col gap-3">
 							{#each client.interactions as it (it.name)}
 								<div class="border-border border-b pb-2 last:border-0">
-									<button class="crm-rowbtn -mx-2" onclick={() => crm.openNote(it.path)}>
-										<span class="text-foreground flex-1 text-sm font-medium">{it.title}</span>
-										<span class="text-muted-foreground shrink-0 font-mono text-xs">{it.date}</span>
+									<button class="crm-cardbtn -mx-2 rounded-lg px-2 py-1.5" onclick={() => crm.openNote(it.path)}>
+										<span class="flex items-center justify-between gap-2">
+											<span class="text-foreground text-sm font-medium">{it.title}</span>
+											<span class="text-muted-foreground flex shrink-0 items-center gap-2 font-mono text-xs">
+												<StatusBadge status={it.type} label={INTERACTION_LABELS[it.type]} />
+												{it.date}
+											</span>
+										</span>
+										{#if it.summary}<span class="text-muted-foreground text-sm">{it.summary}</span>{/if}
 									</button>
-									{#if it.summary}<p class="text-muted-foreground mt-1 text-sm">{it.summary}</p>{/if}
 								</div>
 							{/each}
 						</div>

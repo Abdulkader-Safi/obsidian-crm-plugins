@@ -28,7 +28,7 @@
 [data-bits-floating-content-wrapper] {
 	--background: var(--background-primary);
 	--foreground: var(--text-normal);
-	--card: var(--background-primary);
+	--card: var(--background-secondary);
 	--card-foreground: var(--text-normal);
 	--popover: var(--background-primary);
 	--popover-foreground: var(--text-normal);
@@ -86,6 +86,25 @@
 	font: inherit;
 }
 .app-root button.crm-rowbtn:hover {
+	background: var(--background-modifier-hover);
+}
+
+/* Full-width, multi-line clickable card (e.g. an interaction entry). */
+.app-root button.crm-cardbtn {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	width: 100%;
+	gap: 4px;
+	text-align: left;
+	background: transparent;
+	border: none;
+	box-shadow: none;
+	cursor: pointer;
+	color: inherit;
+	font: inherit;
+}
+.app-root button.crm-cardbtn:hover {
 	background: var(--background-modifier-hover);
 }
 

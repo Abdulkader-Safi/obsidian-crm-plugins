@@ -2,7 +2,7 @@
 	import type { CrmStore } from '../../crm/store';
 	import { INTERACTION_TYPES, INTERACTION_LABELS, type InteractionType } from '../../crm/types';
 	import * as Field from '$lib/components/ui/field';
-	import * as ToggleGroup from '$lib/components/ui/toggle-group';
+	import * as Select from '$lib/components/ui/select';
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
 	import { toast } from 'svelte-sonner';
@@ -48,23 +48,23 @@
 		<Field.FieldLabel for="li-title">Title</Field.FieldLabel>
 		<Input id="li-title" bind:value={title} placeholder="e.g. Follow-up call" />
 	</Field.Field>
-	<Field.Field>
-		<Field.FieldLabel>Type</Field.FieldLabel>
-		<ToggleGroup.Root type="single" variant="outline" bind:value={type}>
-			{#each typeOptions as o (o.value)}
-				<ToggleGroup.Item
-					value={o.value}
-					class="data-[state=on]:bg-primary! data-[state=on]:text-primary-foreground! data-[state=on]:border-primary!"
-				>
-					{o.label}
-				</ToggleGroup.Item>
-			{/each}
-		</ToggleGroup.Root>
-	</Field.Field>
-	<Field.Field>
-		<Field.FieldLabel for="li-date">Date</Field.FieldLabel>
-		<Input id="li-date" type="date" bind:value={date} />
-	</Field.Field>
+	<div class="grid grid-cols-2 gap-4">
+		<Field.Field>
+			<Field.FieldLabel>Type</Field.FieldLabel>
+			<Select.Root type="single" bind:value={type}>
+				<Select.Trigger class="w-full">{INTERACTION_LABELS[type as InteractionType]}</Select.Trigger>
+				<Select.Content>
+					{#each typeOptions as o (o.value)}
+						<Select.Item value={o.value} label={o.label} />
+					{/each}
+				</Select.Content>
+			</Select.Root>
+		</Field.Field>
+		<Field.Field>
+			<Field.FieldLabel for="li-date">Date</Field.FieldLabel>
+			<Input id="li-date" type="date" bind:value={date} />
+		</Field.Field>
+	</div>
 	<Field.Field>
 		<Field.FieldLabel for="li-summary">Summary</Field.FieldLabel>
 		<Input id="li-summary" bind:value={summary} placeholder="What was discussed?" />

@@ -162,33 +162,29 @@
 				{#if followUps.length}
 					{#each followUps as deal (deal.path)}
 						{@const r = reminder(deal.nextFollowUp)}
-							<div class="border-border flex items-center gap-4 border-b px-5 py-3.5 last:border-0">
-							<div class="flex w-10 shrink-0 flex-col items-center">
-								<span class="text-foreground font-mono text-xl font-semibold leading-none">{dayOf(deal.nextFollowUp)}</span>
-								<span class="text-muted-foreground mt-0.5 text-[10px] font-semibold tracking-wider">{monthOf(deal.nextFollowUp)}</span>
-							</div>
-							<div class="min-w-0 flex-1">
-								<div class="flex flex-wrap items-center gap-2.5">
-									<button class="text-foreground text-sm font-semibold hover:underline" onclick={() => go({ name: 'deal', path: deal.path })}>
-										{deal.client ?? deal.service}
-									</button>
-									{#if deal.service}
-										<span class="text-muted-foreground text-xs">{deal.service}</span>
-									{/if}
-									<StatusBadge status={deal.stage} />
+						<div class="border-border hover:bg-accent flex items-center gap-3 border-b last:border-0">
+							<button class="crm-rowbtn !rounded-none gap-4 px-5 py-3.5" onclick={() => go({ name: 'deal', path: deal.path })}>
+								<span class="flex w-10 shrink-0 flex-col items-center">
+									<span class="text-foreground font-mono text-xl font-semibold leading-none">{dayOf(deal.nextFollowUp)}</span>
+									<span class="text-muted-foreground mt-0.5 text-[10px] font-semibold tracking-wider">{monthOf(deal.nextFollowUp)}</span>
+								</span>
+								<span class="min-w-0 flex-1">
+									<span class="flex flex-wrap items-center gap-2.5">
+										<span class="text-foreground text-sm font-semibold">{deal.client ?? deal.service}</span>
+										{#if deal.service}<span class="text-muted-foreground text-xs">{deal.service}</span>{/if}
+										<StatusBadge status={deal.stage} />
 										{#if r}
 											<span class="rounded-full px-2 py-0.5 text-[11px] font-semibold" style="background-color: {r.hue}22; color: {r.hue};">{r.label}</span>
 										{/if}
-								</div>
-								{#if deal.followUpNote}
-									<p class="text-muted-foreground mt-1 text-[13px]">{deal.followUpNote}</p>
-								{/if}
-							</div>
-							{#if deal.client}
-								<Button variant="outline" size="sm" onclick={() => crm.openModal('log-interaction', { targetPath: deal.path, targetLabel: deal.service })}>
-									<MessageSquarePlus data-icon="inline-start" /> Log
-								</Button>
-							{/if}
+									</span>
+									{#if deal.followUpNote}
+										<span class="text-muted-foreground mt-1 block text-[13px]">{deal.followUpNote}</span>
+									{/if}
+								</span>
+							</button>
+							<Button class="mr-4 shrink-0" variant="outline" size="sm" onclick={() => crm.openModal('log-interaction', { targetPath: deal.path, targetLabel: deal.service })}>
+								<MessageSquarePlus data-icon="inline-start" /> Log
+							</Button>
 						</div>
 					{/each}
 				{:else}
@@ -303,19 +299,19 @@
 					{#each recent as it (it.name)}
 						{@const Icon = actIcon(it)}
 						<button
-							class="border-border hover:bg-accent flex w-full gap-3 border-b px-5 py-3.5 text-left last:border-0"
+							class="border-border hover:bg-accent flex w-full items-start gap-3 border-b px-5 py-4 text-left last:border-0"
 							onclick={() => crm.openNote(it.path)}
 						>
-							<span class="flex size-7 shrink-0 items-center justify-center rounded-full" style="background-color: {statusHue('lead')}22; color: {statusHue('lead')};">
+							<span class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full" style="background-color: {statusHue('lead')}22; color: {statusHue('lead')};">
 								<Icon class="size-3.5" />
 							</span>
-							<div class="min-w-0 flex-1">
-								<div class="flex items-center justify-between gap-2">
-									<span class="text-foreground truncate text-[13px] font-medium">{it.client ?? it.title}</span>
+							<span class="flex min-w-0 flex-1 flex-col gap-1">
+								<span class="flex items-baseline justify-between gap-2">
+									<span class="text-foreground truncate text-sm font-semibold">{it.client ?? it.title}</span>
 									<span class="text-muted-foreground shrink-0 font-mono text-[11px]">{deadline(it.date)}</span>
-								</div>
-								{#if it.summary}<p class="text-muted-foreground mt-0.5 text-[13px]">{it.summary}</p>{/if}
-							</div>
+								</span>
+								{#if it.summary}<span class="text-muted-foreground text-[13px] leading-snug">{it.summary}</span>{/if}
+							</span>
 						</button>
 					{/each}
 				{:else}
