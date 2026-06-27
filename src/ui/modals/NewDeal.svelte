@@ -12,7 +12,8 @@
 		close,
 		clientName = '',
 		stage: initialStage = 'lead',
-	}: { store: CrmStore; close: () => void; clientName?: string; stage?: string } = $props();
+		defaultCurrency = 'USD',
+	}: { store: CrmStore; close: () => void; clientName?: string; stage?: string; defaultCurrency?: string } = $props();
 
 	// svelte-ignore state_referenced_locally
 	const clients = store.getModel().clients;
@@ -32,7 +33,7 @@
 	const clientOptions = clients.map((c) => ({ value: c.name, label: c.name }));
 	const stageOptions = DEAL_STAGES.map((s) => ({ value: s, label: DEAL_STAGE_LABELS[s] }));
 	const stageLabel = $derived(DEAL_STAGE_LABELS[stage as DealStage] ?? 'Select');
-	const currency = $derived(clients.find((c) => c.name === client)?.currency || 'USD');
+	const currency = $derived(clients.find((c) => c.name === client)?.currency || defaultCurrency);
 
 	async function save() {
 		if (!client || !service.trim() || saving) return;

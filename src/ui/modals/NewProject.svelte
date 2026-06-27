@@ -13,7 +13,8 @@
 		close,
 		clientName = '',
 		project,
-	}: { store: CrmStore; close: () => void; clientName?: string; project?: Project } = $props();
+		defaultCurrency = 'USD',
+	}: { store: CrmStore; close: () => void; clientName?: string; project?: Project; defaultCurrency?: string } = $props();
 
 	// svelte-ignore state_referenced_locally
 	const clients = store.getModel().clients;
@@ -45,7 +46,7 @@
 	const termOptions = TERMS.map((t) => ({ value: t, label: t }));
 
 	const statusLabel = $derived(PROJECT_STATUS_LABELS[status as ProjectStatus] ?? 'Select');
-	const currency = $derived(clients.find((c) => c.name === client)?.currency || 'USD');
+	const currency = $derived(clients.find((c) => c.name === client)?.currency || defaultCurrency);
 
 	async function save() {
 		if (!name.trim() || saving) return;

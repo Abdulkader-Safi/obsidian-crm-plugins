@@ -36,7 +36,12 @@ export function openCrmModal(
 		const Wrapper = COMPONENTS[key] as unknown as Component<Record<string, unknown>>;
 		component = mount(Wrapper, {
 			target: modal.contentEl,
-			props: { ...props, store: plugin.store, close: () => modal.close() },
+			props: {
+				...props,
+				store: plugin.store,
+				defaultCurrency: plugin.settings.defaultCurrency,
+				close: () => modal.close(),
+			},
 		});
 	};
 	modal.onClose = () => {

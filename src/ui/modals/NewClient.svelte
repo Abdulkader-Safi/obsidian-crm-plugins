@@ -7,7 +7,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
 
-	let { store, close, client }: { store: CrmStore; close: () => void; client?: Client } = $props();
+	let { store, close, client, defaultCurrency = 'USD' }: { store: CrmStore; close: () => void; client?: Client; defaultCurrency?: string } = $props();
 
 	// svelte-ignore state_referenced_locally
 	const c = client;
@@ -42,7 +42,7 @@
 			industry,
 			country,
 			region,
-			currency: client?.currency || 'USD',
+			currency: client?.currency || defaultCurrency,
 			email,
 			phone,
 			website,
