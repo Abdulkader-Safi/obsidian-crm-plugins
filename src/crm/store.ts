@@ -78,6 +78,24 @@ export class CrmStore {
 		return this.model;
 	}
 
+	/** Distinct currency codes currently used across clients, projects, and deals. */
+	currenciesInUse(): string[] {
+		const { clients, projects, deals } = this.model;
+		const all = [...clients, ...projects, ...deals].map((e) => e.currency).filter(Boolean);
+		return [...new Set(all)];
+	}
+
+	/** Rewrite the currency frontmatter on every client, project, and deal note. Returns the count changed. */
+	async setAllCurrencies(to: string): Promise<number> {
+		const { clients, projects, deals } = this.model;
+		const targets = [...clients, ...projects, ...deals].filter((e) => e.currency !== to);
+		for (const e of targets) {
+			await this.adapter.updateFrontmatter(e.path, { currency: to });
+		}
+		this.reindex();
+		return targets.length;
+	}
+
 	subscribe(fn: () => void): () => void {
 		this.listeners.add(fn);
 		return () => {

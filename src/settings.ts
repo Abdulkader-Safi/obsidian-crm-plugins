@@ -36,18 +36,58 @@ export class CrmSettingTab extends PluginSettingTab {
 					}),
 			);
 
-		new Setting(containerEl)
+		let pending = this.plugin.settings.defaultCurrency;
+		let inUse = this.plugin.store.currenciesInUse();
+
+		const currencySetting = new Setting(containerEl)
 			.setName('Default currency')
-			.setDesc('Currency code applied to new clients and projects.')
-			.addText((text) =>
-				text
-					.setPlaceholder('USD')
-					.setValue(this.plugin.settings.defaultCurrency)
-					.onChange(async (value) => {
-						this.plugin.settings.defaultCurrency = value.trim() || 'USD';
+			.setDesc('Currency code applied to new clients and projects.');
+
+		const promptHolder = containerEl.createDiv();
+
+		const renderPrompt = () => {
+			promptHolder.empty();
+			const others = inUse.filter((c) => c && c !== pending);
+			if (others.length === 0) return;
+			new Setting(promptHolder)
+				.setDesc(`Your notes use ${others.join(', ')}. Migrate them all to ${pending}?`)
+				.addButton((btn) =>
+					btn
+						.setButtonText(`Migrate to ${pending}`)
+						.setCta()
+						.onClick(async () => {
+							const n = await this.plugin.store.setAllCurrencies(pending);
+							this.plugin.settings.defaultCurrency = pending;
+							await this.plugin.saveSettings();
+							new Notice(`Updated currency on ${n} note(s) to ${pending}.`);
+							this.display();
+						}),
+				);
+		};
+
+		currencySetting.addText((text) =>
+			text
+				.setPlaceholder('USD')
+				.setValue(this.plugin.settings.defaultCurrency)
+				.onChange(async (value) => {
+					pending = value.trim() || 'USD';
+					// Save right away only when no existing note needs migrating; otherwise
+					// defer the save until the user confirms via the Migrate button.
+					if (!inUse.some((c) => c && c !== pending)) {
+						this.plugin.settings.defaultCurrency = pending;
 						await this.plugin.saveSettings();
-					}),
-			);
+					}
+					renderPrompt();
+				}),
+		);
+
+		// The model may be stale when the tab opens; refresh, then redraw the prompt.
+		void this.plugin.refresh().then(() => {
+			inUse = this.plugin.store.currenciesInUse();
+			renderPrompt();
+		});
+
+		renderPrompt();
 
 		new Setting(containerEl).setName('AI agents').setHeading();
 

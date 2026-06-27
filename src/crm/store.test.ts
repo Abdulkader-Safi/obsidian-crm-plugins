@@ -71,6 +71,32 @@ describe('reindex + subscribe', () => {
 	});
 });
 
+describe('currency migration', () => {
+	test('currenciesInUse returns distinct currencies across clients, projects, and deals', () => {
+		const { adapter, store } = makeStore();
+		adapter.notes = [
+			{ path: 'CRM/Clients/A.md', frontmatter: { crm: 'client', currency: 'KWD' }, body: '' },
+			{ path: 'CRM/Deals/D.md', frontmatter: { crm: 'deal', client: '[[A]]', stage: 'lead', currency: 'USD' }, body: '' },
+			{ path: 'CRM/Projects/P.md', frontmatter: { crm: 'project', client: '[[A]]', status: 'discovery', currency: 'KWD' }, body: '' },
+		];
+		store.reindex();
+		expect(store.currenciesInUse().sort()).toEqual(['KWD', 'USD']);
+	});
+
+	test('setAllCurrencies rewrites every differing note and returns the count', async () => {
+		const { adapter, store } = makeStore();
+		adapter.notes = [
+			{ path: 'CRM/Clients/A.md', frontmatter: { crm: 'client', currency: 'KWD' }, body: '' },
+			{ path: 'CRM/Deals/D.md', frontmatter: { crm: 'deal', client: '[[A]]', stage: 'lead', currency: 'USD' }, body: '' },
+			{ path: 'CRM/Projects/P.md', frontmatter: { crm: 'project', client: '[[A]]', status: 'discovery', currency: 'USD' }, body: '' },
+		];
+		store.reindex();
+		const changed = await store.setAllCurrencies('USD');
+		expect(changed).toBe(1); // only the KWD client differed
+		expect(store.currenciesInUse()).toEqual(['USD']);
+	});
+});
+
 describe('createClient', () => {
 	test('writes an account note into the Clients folder', async () => {
 		const { adapter, store } = makeStore();
