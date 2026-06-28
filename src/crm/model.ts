@@ -79,6 +79,7 @@ function inlineInteraction(
 		title: raw.title || 'Interaction',
 		nextAction: '',
 		summary: raw.summary,
+		index: raw.index,
 	};
 }
 

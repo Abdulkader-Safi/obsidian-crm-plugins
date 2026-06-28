@@ -91,6 +91,29 @@
 	background: var(--background-modifier-hover);
 }
 
+/* Small square icon button for inline row actions (edit/delete an entry). */
+.app-root button.crm-iconbtn {
+	display: inline-flex;
+	width: 26px;
+	height: 26px;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	background: transparent;
+	border: none;
+	box-shadow: none;
+	cursor: pointer;
+	border-radius: 6px;
+	color: var(--text-muted);
+}
+.app-root button.crm-iconbtn:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+.app-root button.crm-iconbtn.is-danger:hover {
+	color: var(--text-error);
+}
+
 /* Flush variant: a row button with no padding or hover fill (e.g. a card title). */
 .app-root button.crm-rowbtn.is-flush {
 	padding: 0;

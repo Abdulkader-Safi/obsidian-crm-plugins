@@ -10,7 +10,7 @@ import {
 	type ProjectInput,
 	type DealInput,
 } from './frontmatter';
-import { appendTask, appendInteraction, setTaskDone } from './body';
+import { appendTask, appendInteraction, setTaskDone, setInteraction, removeInteraction } from './body';
 import { agentDocs } from './docs';
 import type { Client, CrmModel, Project, Deal, DealStage, Task } from './types';
 
@@ -168,11 +168,15 @@ export class CrmStore {
 		this.reindex();
 	}
 
-	async updateInteraction(
-		path: string,
-		patch: Record<string, unknown>,
-	): Promise<void> {
-		await this.adapter.updateFrontmatter(path, patch);
+	/** Rewrite the interaction bullet at `index` within the note's body. */
+	async editInteraction(path: string, index: number, entry: InteractionEntry): Promise<void> {
+		await this.adapter.editBody(path, (body) => setInteraction(body, index, entry));
+		this.reindex();
+	}
+
+	/** Delete the interaction bullet at `index` within the note's body. */
+	async deleteInteraction(path: string, index: number): Promise<void> {
+		await this.adapter.editBody(path, (body) => removeInteraction(body, index));
 		this.reindex();
 	}
 

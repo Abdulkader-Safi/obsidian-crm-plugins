@@ -9,10 +9,24 @@
 	import { Input } from '$lib/components/ui/input';
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
 	import Clickable from '$lib/components/Clickable.svelte';
+	import Pencil from '@lucide/svelte/icons/pencil';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import { toast } from 'svelte-sonner';
 
 	let { deal, model, go }: { deal: Deal; model: CrmModel; go: Go } = $props();
 	const crm = getCrm();
+
+	function editInteraction(it: Deal['interactions'][number]) {
+		crm.openModal('log-interaction', {
+			targetPath: it.path,
+			editIndex: it.index,
+			interaction: { type: it.type, date: it.date, title: it.title, summary: it.summary },
+		});
+	}
+
+	function deleteInteraction(it: Deal['interactions'][number]) {
+		crm.openModal('delete-interaction', { targetPath: it.path, index: it.index, title: it.title });
+	}
 
 	// svelte-ignore state_referenced_locally
 	let reason = $state(deal.outcomeReason);
@@ -115,8 +129,8 @@
 					{#if deal.interactions.length}
 						<div class="flex flex-col gap-3">
 							{#each deal.interactions as it (it.name)}
-								<div class="border-border border-b pb-2 last:border-0">
-									<Clickable class="hover:bg-accent -mx-2 flex cursor-pointer flex-col gap-1 rounded-lg px-2 py-1.5" onclick={() => crm.openNote(it.path)}>
+								<div class="group border-border flex items-start gap-1 border-b pb-2 last:border-0">
+									<Clickable class="hover:bg-accent -mx-2 flex flex-1 cursor-pointer flex-col gap-1 rounded-lg px-2 py-1.5" onclick={() => crm.openNote(it.path)}>
 										<div class="flex items-center justify-between gap-2">
 											<span class="text-foreground text-sm font-medium">{it.title}</span>
 											<span class="text-muted-foreground flex shrink-0 items-center gap-2 font-mono text-xs">
@@ -126,6 +140,10 @@
 										</div>
 										{#if it.summary}<p class="text-muted-foreground text-sm">{it.summary}</p>{/if}
 									</Clickable>
+									<div class="flex shrink-0 gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+										<button class="crm-iconbtn" aria-label="Edit interaction" onclick={() => editInteraction(it)}><Pencil size={14} /></button>
+										<button class="crm-iconbtn is-danger" aria-label="Delete interaction" onclick={() => deleteInteraction(it)}><Trash2 size={14} /></button>
+									</div>
 								</div>
 							{/each}
 						</div>

@@ -6,13 +6,15 @@ import LogInteraction from './LogInteraction.svelte';
 import DeleteConfirm from './DeleteConfirm.svelte';
 import NewProject from './NewProject.svelte';
 import NewDeal from './NewDeal.svelte';
+import DeleteInteraction from './DeleteInteraction.svelte';
 
 export type ModalKey =
 	| 'new-client'
 	| 'log-interaction'
 	| 'delete-client'
 	| 'new-project'
-	| 'new-deal';
+	| 'new-deal'
+	| 'delete-interaction';
 
 const COMPONENTS = {
 	'new-client': NewClient,
@@ -20,6 +22,7 @@ const COMPONENTS = {
 	'delete-client': DeleteConfirm,
 	'new-project': NewProject,
 	'new-deal': NewDeal,
+	'delete-interaction': DeleteInteraction,
 } as const;
 
 export function openCrmModal(

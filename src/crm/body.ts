@@ -125,9 +125,51 @@ export function appendTask(body: string, text: string): string {
 	return appendToSection(body, TASKS_RE, '## Tasks', `- [ ] ${text}`);
 }
 
+function interactionLine(r: Omit<InlineInteractionRaw, 'index'>): string {
+	return `- ${r.date} | ${r.type} | ${r.title}${r.summary ? ` | ${r.summary}` : ''}`;
+}
+
 export function appendInteraction(body: string, r: Omit<InlineInteractionRaw, 'index'>): string {
-	const line = `- ${r.date} | ${r.type} | ${r.title}${r.summary ? ` | ${r.summary}` : ''}`;
-	return appendToSection(body, INTERACTIONS_RE, '## Interactions', line);
+	return appendToSection(body, INTERACTIONS_RE, '## Interactions', interactionLine(r));
+}
+
+/** Walk the Interactions section and run `op` on the bullet at the given parse index. */
+function editInteractions(
+	body: string,
+	index: number,
+	op: (lines: string[], i: number) => void,
+): string {
+	const lines = body.replace(/\r\n/g, '\n').split('\n');
+	let inSection = false;
+	let idx = 0;
+	for (let i = 0; i < lines.length; i++) {
+		const t = lines[i]!.trim();
+		if (INTERACTIONS_RE.test(t)) {
+			inSection = true;
+			continue;
+		}
+		if (HEADING_RE.test(t)) inSection = false;
+		if (inSection && BULLET_RE.test(lines[i]!)) {
+			if (idx === index) {
+				op(lines, i);
+				break;
+			}
+			idx++;
+		}
+	}
+	return lines.join('\n');
+}
+
+export function setInteraction(body: string, index: number, r: Omit<InlineInteractionRaw, 'index'>): string {
+	return editInteractions(body, index, (lines, i) => {
+		lines[i] = interactionLine(r);
+	});
+}
+
+export function removeInteraction(body: string, index: number): string {
+	return editInteractions(body, index, (lines, i) => {
+		lines.splice(i, 1);
+	});
 }
 
 export function setTaskDone(body: string, index: number, done: boolean): string {

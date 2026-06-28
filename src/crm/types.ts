@@ -67,6 +67,7 @@ export interface Interaction {
 	title: string;
 	nextAction: string;
 	summary: string;
+	index: number;
 }
 
 export interface Task {

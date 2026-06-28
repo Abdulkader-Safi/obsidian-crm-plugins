@@ -1,5 +1,5 @@
 import { test, expect, describe } from 'bun:test';
-import { splitBody, appendTask, appendInteraction, setTaskDone } from './body';
+import { splitBody, appendTask, appendInteraction, setTaskDone, setInteraction, removeInteraction } from './body';
 
 const BODY = `This is the deal comment.
 Multiple lines.
@@ -64,5 +64,26 @@ describe('setTaskDone', () => {
 		expect(splitBody(out).tasks[0]!.done).toBe(true);
 		const out2 = setTaskDone(BODY, 1, false);
 		expect(splitBody(out2).tasks[1]!.done).toBe(false);
+	});
+});
+
+describe('setInteraction', () => {
+	test('rewrites the nth interaction bullet, leaving others and tasks intact', () => {
+		const out = setInteraction(BODY, 1, { date: '2026-06-21', type: 'meeting', title: 'Intro meeting', summary: 'Reworked scope.' });
+		const r = splitBody(out);
+		expect(r.interactions).toHaveLength(2);
+		expect(r.interactions[0]).toMatchObject({ date: '2026-06-23', title: 'Follow up' });
+		expect(r.interactions[1]).toMatchObject({ date: '2026-06-21', type: 'meeting', title: 'Intro meeting', summary: 'Reworked scope.' });
+		expect(r.tasks).toHaveLength(2);
+	});
+});
+
+describe('removeInteraction', () => {
+	test('deletes the nth interaction bullet only', () => {
+		const out = removeInteraction(BODY, 0);
+		const r = splitBody(out);
+		expect(r.interactions).toHaveLength(1);
+		expect(r.interactions[0]).toMatchObject({ date: '2026-06-20', title: 'Intro call' });
+		expect(r.tasks).toHaveLength(2);
 	});
 });
