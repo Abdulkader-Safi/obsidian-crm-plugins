@@ -1,6 +1,6 @@
 {
 	"name": "vault-crm",
-	"version": "1.0.4",
+	"version": "1.0.5",
 	"description": "A CRM for Obsidian that stores clients, deals, and projects as plain markdown notes.",
 	"author": "Abdulkader Safi <safi.abdulkader@gmail.com> (https://abdulkadersafi.com)",
 	"repository": {
