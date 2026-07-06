@@ -12,6 +12,7 @@
 
 /* Scan only the plugin UI. source(none) disables Tailwind's automatic project
  * scan so stray tokens in docs/markdown never leak utilities into the output. */
+/* stylelint-disable-next-line at-rule-no-unknown -- Tailwind v4 build directive, compiled away */
 @source "./ui/**/*.{svelte,ts}";
 
 /*
@@ -172,6 +173,7 @@
 	border-color: var(--interactive-accent);
 }
 
+/* stylelint-disable-next-line at-rule-no-unknown -- Tailwind v4 theme directive, compiled away */
 @theme inline {
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
